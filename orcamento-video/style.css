@@ -1,0 +1,219 @@
+body {
+  background: #0d1215;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  color: #f2f2f2;
+  margin: 0;
+  padding: 0;
+}
+
+.card-central {
+  background: #0d1215;
+  border: 2px solid #40849e;
+  border-radius: 18px;
+  box-shadow: 0 8px 48px rgba(0,0,0,0.18);
+  max-width: 540px;
+  margin: 56px auto 0 auto;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.header-card {
+  display: flex;
+  align-items: flex-start;
+  padding: 32px 32px 8px 32px;
+  border-radius: 18px 18px 0 0;
+  background: #0d1215;
+}
+
+.logo-card {
+  width: 64px;
+  height: 64px;
+  min-width: 64px;
+  min-height: 64px;
+  object-fit: contain;
+  background: transparent;
+  margin-right: 18px;
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+.header-textos {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.main-title {
+  font-size: 1.34em;
+  color: #f2f2f2;
+  font-weight: 800;
+  margin: 0 0 6px 0;
+  line-height: 1.16;
+}
+
+.frase-impactante {
+  font-size: 1em;
+  color: #f2f2f2;
+  margin-bottom: 4px;
+}
+.frase-impactante .azul { color: #40849e; font-weight: 600; }
+
+.social-footer {
+  display: flex;
+  gap: 18px;
+  margin: 12px 0 0 0;
+  align-items: center;
+}
+.social-footer a {
+  display: flex;
+  align-items: center;
+  color: #40849e;
+  transition: color 0.2s;
+}
+.social-footer a:hover { color: #09BC8A; }
+.social-footer svg { display: block; fill: none; stroke: currentColor; }
+
+.container-form {
+  padding: 12px 32px 22px 32px;
+  background: #0d1215;
+  border-radius: 0 0 18px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+#wizard {
+  margin-bottom: 12px;
+}
+
+label {
+  display: block;
+  margin-top: 14px;
+  margin-bottom: 3px;
+  font-size: 1em;
+  color: #f2f2f2;
+  font-weight: 600;
+}
+input[type="text"],
+input[type="email"],
+input[type="number"],
+input[type="url"],
+input[type="date"],
+select,
+textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1.5px solid #40849e;
+  background: #f2f2f2;
+  color: #0d1215;
+  font-size: 1em;
+  margin-bottom: 8px;
+  transition: border 0.17s;
+}
+input:focus,
+select:focus,
+textarea:focus {
+  border: 1.5px solid #40849e;
+  outline: none;
+}
+.extra-options {
+  background: #10161b;
+  border-left: 3px solid #40849e;
+  margin: 6px 0 10px 0;
+  padding: 7px 12px;
+  border-radius: 0 7px 7px 0;
+  font-size: 0.95em;
+  color: #f2f2f2;
+}
+
+button {
+  margin: 16px 7px 0 0;
+  background: linear-gradient(90deg,#40849e 70%,#0d1215 100%);
+  color: #f2f2f2;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 22px;
+  font-size: 1em;
+  cursor: pointer;
+  font-weight: 700;
+  box-shadow: 0 2px 8px #40849e11;
+  transition: background .16s, color .16s;
+}
+button.next {
+  background: linear-gradient(90deg,#40849e 85%,#0d1215 100%);
+  color: #f2f2f2;
+}
+button.back {
+  background: #0d1215;
+  border: 2px solid #40849e;
+  color: #40849e;
+}
+button[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+#result {
+  margin: 10px 0 0 0;
+  text-align: center;
+  color: #40849e;
+  font-weight: 700;
+  font-size: 1em;
+  min-height: 24px;
+}
+
+footer {
+  text-align: center;
+  margin-top: 13px;
+  color: #f2f2f2;
+  font-size: 0.98em;
+  padding-bottom: 6px;
+}
+.footer-text { margin-top: 8px; color: #f2f2f2; }
+.rodape-link {
+  margin-top: 2px;
+}
+.rodape-link a {
+  color: #09BC8A;
+  font-weight: 600;
+  text-decoration: none;
+  font-size: 1em;
+}
+a, a:visited {
+  color: #40849e;
+  text-decoration: none;
+}
+a:hover {
+  color: #09BC8A;
+  text-decoration: underline;
+}
+
+ul {
+  margin: 5px 0 5px 20px;
+  padding: 0;
+}
+ul li {
+  color: #0d1215;
+  background: #e0f2fa;
+  border-radius: 4px;
+  padding: 2px 8px;
+  margin-bottom: 1px;
+  font-size: 0.97em;
+}
+
+@media (max-width: 600px) {
+  .card-central {
+    max-width: 99vw;
+    padding: 0;
+    margin-top: 14px;
+  }
+  .header-card, .container-form {
+    padding: 16px 3vw 12px 3vw;
+  }
+  .logo-card { width: 44px; height: 44px; min-width: 44px; min-height: 44px; }
+  .main-title { font-size: 1em;}
+  .frase-impactante { font-size: 0.96em; }
+}
