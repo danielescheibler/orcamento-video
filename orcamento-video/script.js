@@ -3,16 +3,37 @@ let state = { tipoServico: null };
 
 function minutosParaSegundos(str) {
   if (!str) return 0;
-  let m = str.match(/(\d+)[^\d]+(\d+)/); // 1:30 ou 1m30s
+  let m = str.match(/(\d+)[^\d]+(\d+)/);
   if (m) return parseInt(m[1],10)*60 + parseInt(m[2],10);
   m = str.match(/(\d+)/g);
-  if (m && m.length === 1) return parseInt(m[0],10)*60; // só minutos
+  if (m && m.length === 1) return parseInt(m[0],10)*60;
   if (m && m.length === 2) return parseInt(m[0],10)*60 + parseInt(m[1],10);
   return 0;
 }
 
+function calcularValorVideo(state) {
+  let valorBase = 100, valorEfeitos = 0, valorLegenda = 0, valorTotal = 0;
+  let totalSegFinal = minutosParaSegundos(state.duracaoFinal);
+  if (totalSegFinal > 90 && totalSegFinal <= 300) valorBase = 150;
+  else if (totalSegFinal > 300) valorBase = 300;
+  if (state.efeitosAnimacoes === 'simples') valorEfeitos = 50;
+  if (state.efeitosAnimacoes === 'complexos') valorEfeitos = 80;
+  valorLegenda = state.legenda === 'sim' ? 20 : 0;
+  valorTotal = valorBase + valorEfeitos + valorLegenda;
+  if (state.prazoEntrega) {
+    let dataEntrega = new Date(state.prazoEntrega);
+    let hoje = new Date();
+    let dias = Math.ceil((dataEntrega - hoje) / (1000 * 60 * 60 * 24));
+    if (dias < 4) valorTotal *= 2;
+  }
+  return valorTotal.toFixed(2).replace('.', ',');
+}
+function calcularValorMotion(state) {
+  if (Number(state.tempoFinal) > 5) return 'Sob análise';
+  return '200,00';
+}
+
 const steps = [
-  // 0 - Escolha do serviço
   function stepTipoServico(state) {
     return `
       <div class="step active">
@@ -26,7 +47,6 @@ const steps = [
       </div>
     `;
   },
-  // 1 - Nome/email
   function stepNomeEmail(state) {
     return `
       <div class="step active">
@@ -38,7 +58,6 @@ const steps = [
       </div>
     `;
   },
-  // 2 - Edição de vídeos: perguntas customizadas
   function stepVideoQuestions(state) {
     return `
       <div class="step active">
@@ -95,15 +114,14 @@ const steps = [
           </div>
         ` : ''}
 
-        <label>7. Prazo de entrega <span style="font-weight:400">(mínimo 4 dias, urgentes dobram o valor)</span>:</label>
-        <input type="date" id="prazoEntrega" value="${state.prazoEntrega || ''}" required>
+       <label>7. Prazo de entrega <span style="font-weight:400">(mínimo 4 dias)</span>:</label>
+       <input type="date" id="prazoEntrega" value="${state.prazoEntrega || ''}" required>
 
         <button class="back" type="button" id="to-step1">Voltar</button>
         <button class="next" type="button" id="to-stepResumo">Ver orçamento</button>
       </div>
     `;
   },
-  // 3 - Motion Design
   function stepMotionQuestions(state) {
     return `
       <div class="step active">
@@ -117,8 +135,21 @@ const steps = [
         <input type="url" id="ref1" placeholder="Link 1" value="${state.ref1 || ''}" required>
         <input type="url" id="ref2" placeholder="Link 2" value="${state.ref2 || ''}" required>
 
-        <label>4. Paleta de cores (hex):</label>
-        <input type="text" id="paleta" placeholder="#000000, #FFFFFF" value="${state.paleta || ''}" required>
+        <label>4. Possui identidade visual?</label>
+        <select id="identidadeVisualMotion">
+          <option value="" disabled ${!state.identidadeVisualMotion ? 'selected' : ''}>Selecione...</option>
+          <option value="nao" ${state.identidadeVisualMotion === 'nao' ? 'selected' : ''}>Não</option>
+          <option value="sim" ${state.identidadeVisualMotion === 'sim' ? 'selected' : ''}>Sim</option>
+        </select>
+        ${state.identidadeVisualMotion === 'sim' ? `
+          <div class="extra-options" style="margin-bottom:2px;">
+            <label>Conte mais sobre sua identidade visual (ou envie depois):</label>
+            <textarea id="descIdentidadeMotion" rows="2" required>${state.descIdentidadeMotion || ''}</textarea>
+            <div style="color:#40849e;font-size:0.98em;margin-top:6px;">
+              <strong>Lembrete:</strong> envie os arquivos por e-mail após aprovar o orçamento.
+            </div>
+          </div>
+        ` : ''}
 
         <label>5. Explique o que tem em mente para o vídeo:</label>
         <textarea id="descricao" rows="2" required>${state.descricao || ''}</textarea>
@@ -131,48 +162,31 @@ const steps = [
       </div>
     `;
   },
-  // 4 - Resumo + PDF + mensagem final
   function stepResumo(state) {
     const isVideo = state.tipoServico === 'video';
     let orcamentoValor = '';
-    let valorBase = 100, valorEfeitos = 0, valorLegenda = 0, valorTotal = 0;
-    let infoEfeitos = '';
     let analise = false;
-
-    // EDIÇÃO DE VÍDEO
     if (isVideo) {
-      let totalSegFinal = minutosParaSegundos(state.duracaoFinal);
-      // TEMPO
-      if (totalSegFinal > 90 && totalSegFinal <= 300) { // acima de 1:30 até 5min
-        valorBase = 150;
-      } else if (totalSegFinal > 300) { // acima de 5min
-        valorBase = 300;
-      } else {
-        valorBase = 100;
-      }
-      // EFEITOS
-      if (state.efeitosAnimacoes === 'simples') valorEfeitos = 50;
-      if (state.efeitosAnimacoes === 'complexos') { valorEfeitos = 80; infoEfeitos = `<div style="color:#40849e;font-weight:600;">Orçamento estimado, sujeito a análise detalhada conforme complexidade.</div>`; }
-      // LEGENDA
-      valorLegenda = state.legenda === 'sim' ? 20 : 0;
-
-      valorTotal = valorBase + valorEfeitos + valorLegenda;
-
-      // PRAZO
-      if (state.prazoEntrega) {
-        let dataEntrega = new Date(state.prazoEntrega);
-        let hoje = new Date();
-        let dias = Math.ceil((dataEntrega - hoje) / (1000 * 60 * 60 * 24));
-        if (dias < 4) valorTotal *= 2;
-      }
-      orcamentoValor = `Valor estimado: <strong style="color:#40849e">R$ ${valorTotal.toFixed(2).replace('.',',')}</strong>
+      let valorFinal = calcularValorVideo(state);
+      orcamentoValor = `Valor estimado: <strong style="color:#40849e">R$ ${valorFinal}</strong>
       <div style="color:#40849e; font-size:0.95em; margin-top:4px;">
         Este valor é uma estimativa inicial e está sujeito a análise detalhada após o envio dos materiais.
       </div>`;
     } else {
-      if (Number(state.tempoFinal) > 5) analise = true;
+      if (Number(state.tempoFinal) > 5) {
+        analise = true;
+        orcamentoValor = `
+          <div style="color:#40849e;font-weight:600;font-size:1.07em;margin:10px 0 6px;">
+            Para finalizar seu orçamento é necessária análise da sua solicitação, peço que me envie mais detalhes por <a href="mailto:danielescheibler@gmail.com" target="_blank">e-mail</a> ou <a href="https://wa.me/5551997523656" target="_blank">WhatsApp</a>.
+          </div>
+          <div style="text-align:center;margin:10px 0 4px;">
+            <img src="http://localhost:3000/please.gif" alt="Aguardo mais detalhes" style="max-width:210px;width:100%;border-radius:7px;">
+          </div>
+        `;
+      }
       else orcamentoValor = `Valor estimado: <strong style="color:#40849e">R$ 200,00</strong>`;
     }
+    state.valorFinal = isVideo ? calcularValorVideo(state) : (analise ? 'Sob análise' : '200,00');
 
     return `
       <div class="step active" id="resumo-step">
@@ -190,8 +204,7 @@ const steps = [
               <li><a href="${state.ref2}" target="_blank">${state.ref2}</a></li>
             </ul>
             <strong>Efeitos visuais e animações:</strong> ${state.efeitosAnimacoes === 'simples' ? 'Simples' : state.efeitosAnimacoes === 'complexos' ? 'Complexos' : 'Não'}<br>
-            ${state.efeitosAnimacoes === 'simples' || state.efeitosAnimacoes === 'complexos' ? `<strong>Descrição dos efeitos:</strong> ${state.descEfeitos || ''}<br>` : ''}
-            ${infoEfeitos}
+            ${(state.efeitosAnimacoes === 'simples' || state.efeitosAnimacoes === 'complexos') ? `<strong>Descrição dos efeitos:</strong> ${state.descEfeitos || ''}<br>` : ''}
             <strong>Legendas:</strong> ${state.legenda === 'sim' ? 'Sim' : 'Não'}<br>
             <strong>Identidade visual:</strong> ${state.identidadeVisual === 'sim' ? 'Sim' : 'Não'}<br>
             ${state.identidadeVisual === 'sim' ? `<strong>Descrição identidade:</strong> ${state.descIdentidade || ''}<br>` : ''}
@@ -203,29 +216,21 @@ const steps = [
               <li><a href="${state.ref1}" target="_blank">${state.ref1}</a></li>
               <li><a href="${state.ref2}" target="_blank">${state.ref2}</a></li>
             </ul>
-            <strong>Paleta de cores:</strong> ${state.paleta}<br>
+            <strong>Identidade visual:</strong> ${state.identidadeVisualMotion === 'sim' ? 'Sim' : 'Não'}<br>
+            ${state.identidadeVisualMotion === 'sim' ? `<strong>Descrição identidade:</strong> ${state.descIdentidadeMotion || ''}<br>` : ''}
             <strong>Descrição:</strong> ${state.descricao}<br>
             <strong>Prazo de entrega:</strong> ${state.prazoEntrega}<br>
           `}
           ${orcamentoValor}
         </div>
-        ${!analise ? `<button class="next" type="button" id="baixar-orcamento-pdf" style="margin-bottom:10px; background:#40849e; color:#f2f2f2; border-radius:4px;">⬇️ Baixar orçamento em PDF</button>` : ''}
-        <div style="margin-top:8px;text-align:center;font-size:1.04em;">
-          <strong style="color:#09BC8A;">Prontinho!</strong><br>
-          ${analise ?
-            `Seu orçamento requer análise personalizada!<br>Envie este orçamento por e-mail com seus anexos.<br>Bora?`
-            :
-            `Agora é só me enviar um e-mail contendo esse orçamento e seus anexos :D <br>Bora?`
-          }
-          <br>
-          <a href="mailto:danielescheibler@gmail.com?subject=Orçamento%20${isVideo ? 'Edição de Vídeo' : 'Motion Design'}&body=Olá,%20Daniele!%20Segue%20meu%20orçamento%20preenchido%20:%20(Anexe%20arquivos%20aqui)" class="envia-email" style="margin-top:10px;display:inline-block;font-weight:600;color:#40849e;">✉️ Enviar orçamento por e-mail</a>
+        <div style="display:flex;justify-content:center;">
+          <button class="next" type="button" id="enviar-orcamento-email" style="background:#09BC8A; color:#fff; border-radius:4px; margin-bottom:10px;">✉️ Enviar orçamento por e-mail</button>
         </div>
-      </div>
+       </div>
     `;
   }
 ];
 
-// ========== JS Navegação & PDF ==========
 function renderStep() {
   const wizard = document.getElementById('wizard');
   let s = state.tipoServico, v = steps, stepIndex = currentStep;
@@ -248,7 +253,6 @@ function renderStep() {
     };
     return;
   }
-  // Video ou Motion
   if (s === 'video') {
     if (stepIndex === 2) {
       wizard.innerHTML = v[2](state);
@@ -292,13 +296,20 @@ function renderStep() {
       document.getElementById('tempoFinal').oninput = e => { state.tempoFinal = e.target.value; };
       document.getElementById('ref1').oninput = e => { state.ref1 = e.target.value; };
       document.getElementById('ref2').oninput = e => { state.ref2 = e.target.value; };
-      document.getElementById('paleta').oninput = e => { state.paleta = e.target.value; };
+      document.getElementById('identidadeVisualMotion').onchange = e => { state.identidadeVisualMotion = e.target.value; renderStep(); };
+      if (state.identidadeVisualMotion === 'sim') {
+        document.getElementById('descIdentidadeMotion').oninput = e => { state.descIdentidadeMotion = e.target.value; };
+      }
       document.getElementById('descricao').oninput = e => { state.descricao = e.target.value; };
       document.getElementById('prazoEntrega').oninput = e => { state.prazoEntrega = e.target.value; };
       document.getElementById('to-step1').onclick = () => { currentStep = 1; renderStep(); };
       document.getElementById('to-stepResumo').onclick = () => {
-        if (!state.mensagemPublico || !state.tempoFinal || !state.ref1 || !state.ref2 || !state.paleta || !state.descricao || !state.prazoEntrega) {
+        if (!state.mensagemPublico || !state.tempoFinal || !state.ref1 || !state.ref2 || !state.identidadeVisualMotion || !state.descricao || !state.prazoEntrega) {
           showResult("Preencha todos os campos obrigatórios.");
+          return;
+        }
+        if (state.identidadeVisualMotion === 'sim' && !state.descIdentidadeMotion) {
+          showResult("Fale sobre sua identidade visual!");
           return;
         }
         currentStep = 4; renderStep();
@@ -306,50 +317,33 @@ function renderStep() {
       return;
     }
   }
-  // RESUMO
   if (stepIndex === 4) {
     wizard.innerHTML = v[4](state);
-    // PDF
-    const btnPdf = document.getElementById('baixar-orcamento-pdf');
-    if (btnPdf) btnPdf.onclick = () => baixarOrcamentoPDF(state);
+    const btnEmail = document.getElementById('enviar-orcamento-email');
+    if (btnEmail) btnEmail.onclick = async () => {
+      showResult("Enviando orçamento por e-mail...");
+      try {
+        const resp = await fetch('http://localhost:3000/enviar-orcamento', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(state)
+        });
+        const json = await resp.json();
+        if (resp.ok) {
+          showResult("Orçamento enviado por e-mail", "#09BC8A");
+          setTimeout(() => {
+            currentStep = 0;
+            state = { tipoServico: null };
+            renderStep();
+          }, 2000);
+        } else {
+          showResult("Erro ao enviar: " + (json.mensagem || "Tente novamente."), "#D8000C");
+        }
+      } catch (err) {
+        showResult("Erro de conexão. Tente novamente.", "#D8000C");
+      }
+    };
   }
-}
-
-function baixarOrcamentoPDF(state) {
-  const doc = new window.jspdf.jsPDF();
-  const isVideo = state.tipoServico === 'video';
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(16);
-  doc.text(isVideo ? 'Orçamento de Edição de Vídeo' : 'Orçamento Motion Design', 10, 18);
-  doc.setFontSize(12);
-  let y = 32;
-  doc.text(`Nome: ${state.nome}`, 10, y); y += 8;
-  doc.text(`E-mail: ${state.email}`, 10, y); y += 8;
-  doc.text(`O que deseja comunicar/público: ${state.mensagemPublico}`, 10, y, {maxWidth:180}); y += 10;
-  if (isVideo) {
-    doc.text(`Duração bruto: ${state.duracaoBruto}`, 10, y); y += 8;
-    doc.text(`Duração final: ${state.duracaoFinal}`, 10, y); y += 8;
-    doc.text('Referências:', 10, y); y += 8;
-    [state.ref1, state.ref2].forEach(link => { doc.text(`- ${link}`, 15, y); y += 8; });
-    doc.text(`Efeitos visuais/anim.: ${state.efeitosAnimacoes === 'simples' ? 'Simples' : state.efeitosAnimacoes === 'complexos' ? 'Complexos' : 'Não'}`, 10, y); y += 8;
-    if (state.efeitosAnimacoes === 'simples' || state.efeitosAnimacoes === 'complexos') {
-      doc.text(`Descrição: ${state.descEfeitos || ''}`, 15, y, {maxWidth:180}); y += 10;
-    }
-    doc.text(`Legendas: ${state.legenda === 'sim' ? 'Sim' : 'Não'}`, 10, y); y += 8;
-    doc.text(`Identidade visual: ${state.identidadeVisual === 'sim' ? 'Sim' : 'Não'}`, 10, y); y += 8;
-    if (state.identidadeVisual === 'sim') {
-      doc.text(`Descrição identidade: ${state.descIdentidade || ''}`, 15, y, {maxWidth:180}); y += 10;
-    }
-    doc.text(`Prazo de entrega: ${state.prazoEntrega}`, 10, y); y += 8;
-  } else {
-    doc.text(`Tempo final: ${state.tempoFinal}s`, 10, y); y += 8;
-    doc.text('Referências:', 10, y); y += 8;
-    [state.ref1, state.ref2].forEach(link => { doc.text(`- ${link}`, 15, y); y += 8; });
-    doc.text(`Paleta de cores: ${state.paleta}`, 10, y); y += 8;
-    doc.text(`Descrição: ${state.descricao}`, 10, y, {maxWidth:180}); y += 10;
-    doc.text(`Prazo de entrega: ${state.prazoEntrega}`, 10, y); y += 8;
-  }
-  doc.save(isVideo ? 'orcamento-edicao.pdf' : 'orcamento-motion.pdf');
 }
 
 function showResult(msg, cor) {
