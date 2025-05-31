@@ -249,18 +249,27 @@ button[disabled] {
   font-size: 1em;
   min-height: 24px;
 }
+
+/* ===================== RESUMO DO ORÇAMENTO ===================== */
 .resumo-quadro {
-  font-size: 0.72em !important;
-  line-height: 1.08;
-  padding: 4px 6px !important;
-  margin-bottom: 3px !important;
-  border-radius: 4px !important;
-  border-width: 1px !important;
-  max-height: 100px;
-  overflow-y: auto;
+  font-size: 1em !important;
+  line-height: 1.22;
+  padding: 8px 14px !important;
   background: #f2f2f2;
   color: #0d1215;
+  border-radius: 7px !important;
+  border: 1px solid #40849e !important;
+  box-sizing: border-box;
+  word-break: break-word;
+  margin: 0 auto 12px auto;
+  width: 100%;
+  max-width: 400px;
+  min-width: 180px;
+
+  max-height: calc(1.22em * 3 + 16px); /* 3 linhas + padding vertical */
+  overflow-y: auto;
 }
+
 .resumo-quadro ul {
   margin: 2px 0 2px 13px;
   padding-left: 11px;
@@ -354,6 +363,25 @@ button[disabled] {
     padding-right: 0 !important;
     max-width: 98vw;
   }
+  .resumo-quadro {
+    font-size: 1em !important;
+    padding: 8px 4vw !important;
+    max-width: 320px;
+    width: 97vw;
+    min-width: 0;
+    margin-left: auto;
+    margin-right: auto;
+    border-radius: 7px !important;
+    max-height: calc(1.22em * 3 + 16px);
+    overflow-y: auto;
+  }
+  .right-col {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    box-sizing: border-box;
+  }
 }
 @media (max-width: 600px) {
   header {
@@ -395,6 +423,17 @@ button[disabled] {
   .main-wrapper {
     margin-bottom: 70px !important;
   }
+  .resumo-quadro {
+    font-size: 0.98em !important;
+    padding: 6px 2vw !important;
+    max-width: 94vw;
+    width: 98vw;
+    margin-left: auto;
+    margin-right: auto;
+    border-radius: 7px !important;
+    max-height: calc(1.22em * 3 + 14px);
+    overflow-y: auto;
+  }
 }
 /* Links */
 a, a:visited {
@@ -404,4 +443,41 @@ a, a:visited {
 a:hover {
   color: #ffffff;
   text-decoration: underline;
+}
+
+/* Aviso menor */
+.aviso-menor {
+  color: #40849e;
+  font-size: 0.85em;
+  text-align: left;
+  line-height: 1.25;
+  font-style: italic;
+  margin: 0;
+}
+@media (max-width: 600px) {
+  #wizard {
+    padding-left: 3vw;
+    padding-right: 3vw;
+    box-sizing: border-box;
+  }
+}
+@media (max-width: 600px) {
+  #ref1, #ref2 {
+    max-width: 94vw;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+    box-sizing: border-box;
+  }
+}
+@media (max-width: 600px) {
+  #descIdentidade, #descIdentidadeMotion {
+    max-width: 94vw;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+    box-sizing: border-box;
+  }
 }

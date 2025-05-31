@@ -87,10 +87,11 @@ const steps = [
       return `
         <div class="step active">
           <div class="step-title">Tempo de vídeo</div>
-          <label>Duração do vídeo bruto:</label>
-          <input type="text" id="duracaoBruto" placeholder="Ex: 5min" value="${state.duracaoBruto || ''}" required>
-          <label>Duração do vídeo final:</label>
-          <input type="text" id="duracaoFinal" placeholder="Ex: 1min30s" value="${state.duracaoFinal || ''}" required>
+          <label>Duração do vídeo bruto (em minutos):</label>
+          <input type="number" id="duracaoBruto" placeholder="Ex: 5" min="1" max="600" step="any" value="${state.duracaoBruto || ''}" required>
+          <label>Duração do vídeo final (em minutos):</label>
+          <input type="number" id="duracaoFinal" placeholder="Ex: 1.5" min="1" max="600" step="any" value="${state.duracaoFinal || ''}" required>
+          <div id="tempoNumerico-msg" class="form-validation-message" style="display:none;"></div>
         </div>
       `;
     } else {
@@ -99,6 +100,7 @@ const steps = [
           <div class="step-title">Tempo de vídeo</div>
           <label>Tempo final do vídeo (em segundos):</label>
           <input type="number" id="tempoFinal" placeholder="ex: 30" min="1" max="600" value="${state.tempoFinal || ''}" required>
+          <div id="tempoNumerico-msg" class="form-validation-message" style="display:none;"></div>
         </div>
       `;
     }
@@ -208,8 +210,8 @@ const steps = [
     } else if (state.tipoServico === 'video' && state.efeitosAnimacoes === 'complexos') {
       gifMensagemHTML = `
         <div style="display: flex; align-items: center; justify-content: center; gap: 18px; margin: 18px 0;">
-          <div style="color:#40849e; font-size:1em; text-align:left;">
-            Como você selecionou "efeitos e animações complexas",<br>
+          <div class="aviso-menor">
+            Como você selecionou "efeitos e animações complexas",
             este valor é apenas uma referência.<br>
             Envie para a editora analisar e fornecer uma proposta personalizada.
           </div>
@@ -373,9 +375,49 @@ function renderStep() {
     btnNext.onclick = () => {
       // Validação dos campos obrigatórios para a etapa atual
       let valid = true;
+      clearValidationMessage();
+
       if (currentStep === 0 && !state.tipoServico) valid = false;
       if (currentStep === 1 && (!state.nome || !state.email)) valid = false;
       if (currentStep === 2 && !state.mensagemPublico) valid = false;
+      if (currentStep === 3) {
+        // NOVA VALIDAÇÃO: só aceita números, mostra mensagem abaixo do campo e não avança
+        if (state.tipoServico === "video") {
+          const duracaoBruto = Number(state.duracaoBruto);
+          const duracaoFinal = Number(state.duracaoFinal);
+          let msgDiv = document.getElementById('tempoNumerico-msg');
+          if (
+            !state.duracaoBruto || !state.duracaoFinal ||
+            isNaN(duracaoBruto) || isNaN(duracaoFinal)
+          ) {
+            if (msgDiv) {
+              msgDiv.style.display = "block";
+              msgDiv.textContent = "Preencha os campos de duração apenas com números.";
+            }
+            return;
+          } else {
+            if (msgDiv) {
+              msgDiv.style.display = "none";
+              msgDiv.textContent = "";
+            }
+          }
+        } else {
+          const tempoFinal = Number(state.tempoFinal);
+          let msgDiv = document.getElementById('tempoNumerico-msg');
+          if (!state.tempoFinal || isNaN(tempoFinal)) {
+            if (msgDiv) {
+              msgDiv.style.display = "block";
+              msgDiv.textContent = "Preencha o tempo final apenas com números.";
+            }
+            return;
+          } else {
+            if (msgDiv) {
+              msgDiv.style.display = "none";
+              msgDiv.textContent = "";
+            }
+          }
+        }
+      }
       if (currentStep === 3) {
         if (state.tipoServico === "video") {
           if (!state.duracaoBruto || !state.duracaoFinal) valid = false;
@@ -400,9 +442,8 @@ function renderStep() {
           if (state.identidadeVisualMotion === 'sim' && !state.descIdentidadeMotion) valid = false;
         }
       }
-      clearValidationMessage();
+
       if (!valid) {
-        // Mostra mensagem abaixo dos botões, não como popup
         showValidationMessage('Quer orçamento? Preenche aí primeiro. 👀');
         return;
       }
