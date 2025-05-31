@@ -16,7 +16,6 @@ body {
   padding-bottom: 80px;
 }
 
-/* Título principal no topo */
 header {
   width: 100%;
   padding: 60px 0 32px 0;
@@ -32,7 +31,6 @@ header {
   line-height: 1.15;
 }
 
-/* Área principal */
 .main-wrapper {
   display: flex;
   flex-direction: row;
@@ -40,16 +38,14 @@ header {
   justify-content: flex-start;
   width: 100vw;
   max-width: 1100px;
-  margin: 0 auto 0 auto;
-  gap: 0;
+  margin: 0 auto;
   min-height: 280px;
   flex-wrap: wrap;
   position: relative;
-  padding: 12px 0 12px 0;
+  padding: 12px 0;
   box-sizing: border-box;
 }
 
-/* Bloco da esquerda: textos acima, logo abaixo, centralizados */
 .left-block {
   display: flex;
   flex-direction: column;
@@ -93,11 +89,10 @@ header {
   text-align: center;
 }
 
-/* Logo maior, abaixo dos textos */
 .logo-card {
   width: 300px;
   height: 200px;
-  max-width: 30vw;
+  max-width: 90vw;
   min-width: 80px;
   min-height: 50px;
   object-fit: contain;
@@ -109,7 +104,6 @@ header {
   margin-top: 0px;
 }
 
-/* Formulário */
 .right-col {
   display: flex;
   flex-direction: column;
@@ -117,14 +111,13 @@ header {
   min-width: 100px;
   max-width: 380px;
   flex: 1;
-  padding: 0 0 0 0vw;
+  padding: 0;
 }
 
 #wizard {
   margin-bottom: 12px;
 }
 
-/* Barra de progresso só com bolinhas pequenas */
 #progress-bar {
   display: flex;
   justify-content: center;
@@ -164,7 +157,6 @@ header {
 }
 .progress-step .progress-label { display: none; }
 
-/* Títulos e dicas das etapas */
 .step-title {
   font-size: 1.18em;
   font-weight: 700;
@@ -233,7 +225,6 @@ textarea:focus {
   letter-spacing: 0.01em;
 }
 
-/* Botões sem degradê, hover igual links sociais */
 button, button.next {
   background: #0d1215;
   color: #40849e;
@@ -298,7 +289,6 @@ button[disabled] {
   line-height: 0.8;
 }
 
-/* Rodapé fixo no final da página */
 .footer-center {
   position: fixed;
   left: 0;
@@ -342,71 +332,87 @@ button[disabled] {
   transition: stroke 0.4s;
 }
 
-/* Responsivo: empilha tudo centralizado */
+/* RESPONSIVIDADE MOBILE */
 @media (max-width: 900px) {
   .main-wrapper {
     flex-direction: column;
     align-items: center;
-    gap: 0;
-    width: 100vw;
-    min-width: 0;
-    padding: 16px 0 16px 0;
+    padding: 10px 0;
     max-width: 99vw;
+    width: 100vw;
   }
   .left-block, .right-col {
     padding: 8px 0 !important;
     justify-content: center;
     align-items: center;
     text-align: center;
-    max-width: 95vw;
+    max-width: 98vw;
     width: 100%;
     margin-left: 0;
+  }
+  .logo-card {
+    width: 150px;
+    height: 100px;
+    min-width: 60px;
+    min-height: 30px;
+    margin-bottom: 0;
+    margin-top: 8px;
+    max-width: 80vw;
   }
   .service-title, .service-frase {
     text-align: center;
     width: 100%;
-    max-width: 95vw;
+    max-width: 90vw;
     margin-left: 0;
+    font-size: 1em;
   }
   .right-col {
     padding-left: 0 !important;
     padding-right: 0 !important;
-    max-width: 97vw;
+    max-width: 98vw;
   }
 }
 
 @media (max-width: 600px) {
+  header {
+    padding: 28px 0 16px 0;
+  }
   .main-top-title {
-    font-size: 1.2em;
+    font-size: 1.1em;
     padding: 0 1vw;
   }
   .logo-card {
-    width: 70px;
-    height: 70px;
-    min-width: 38px;
-    min-height: 38px;
+    width: 90px;
+    height: 55px;
+    min-width: 30px;
+    min-height: 20px;
     margin-bottom: 0;
-    margin-top: 8px;
+    margin-top: 6px;
+    max-width: 90vw;
   }
-  .service-title { font-size: 1em;}
-  .service-frase { font-size: 0.94em;}
+  .service-title { font-size: 0.98em;}
+  .service-frase { font-size: 0.92em;}
   #progress-bar { gap: 8px; }
   .footer-center {
-    min-height: 44px;
-    font-size: 0.91em;
-    padding: 5px 0 3px 0;
+    min-height: 38px;
+    font-size: 0.88em;
+    padding: 4px 0 2px 0;
     box-shadow: 0 -1px 6px rgba(0,0,0,0.08);
   }
   .social-links svg {
-    width: 22px;
-    height: 22px;
+    width: 18px;
+    height: 18px;
   }
   .right-col {
     padding: 0 !important;
     max-width: 99vw;
   }
+  input, select, textarea {
+    font-size: 0.98em;
+  }
 }
 
+/* Links */
 a, a:visited {
   color: #40849e;
   text-decoration: none;
