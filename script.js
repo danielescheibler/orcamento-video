@@ -1,358 +1,470 @@
 let currentStep = 0;
 let state = { tipoServico: null };
 
-function minutosParaSegundos(str) {
-  if (!str) return 0;
-  let m = str.match(/(\d+)[^\d]+(\d+)/);
-  if (m) return parseInt(m[1],10)*60 + parseInt(m[2],10);
-  m = str.match(/(\d+)/g);
-  if (m && m.length === 1) return parseInt(m[0],10)*60;
-  if (m && m.length === 2) return parseInt(m[0],10)*60 + parseInt(m[1],10);
-  return 0;
+const totalSteps = 8;
+
+function renderProgressBar(currentStep) {
+  let progressHTML = '';
+  for(let i=0; i<totalSteps; i++) {
+    let stepClass = '';
+    if (i < currentStep) stepClass = "completed";
+    else if (i === currentStep) stepClass = "active";
+    progressHTML += `
+      <div class="progress-step ${stepClass}">
+        <div class="progress-circle"></div>
+      </div>
+    `;
+  }
+  document.getElementById('progress-bar').innerHTML = progressHTML;
 }
 
-function calcularValorVideo(state) {
-  let valorBase = 100, valorEfeitos = 0, valorLegenda = 0, valorTotal = 0;
-  let totalSegFinal = minutosParaSegundos(state.duracaoFinal);
-  if (totalSegFinal > 90 && totalSegFinal <= 300) valorBase = 150;
-  else if (totalSegFinal > 300) valorBase = 300;
-  if (state.efeitosAnimacoes === 'simples') valorEfeitos = 50;
-  if (state.efeitosAnimacoes === 'complexos') valorEfeitos = 80;
-  valorLegenda = state.legenda === 'sim' ? 20 : 0;
-  valorTotal = valorBase + valorEfeitos + valorLegenda;
-  if (state.prazoEntrega) {
-    let dataEntrega = new Date(state.prazoEntrega);
-    let hoje = new Date();
-    let dias = Math.ceil((dataEntrega - hoje) / (1000 * 60 * 60 * 24));
-    if (dias < 4) valorTotal *= 2;
+// Função para calcular o valor aproximado
+function calcularValor(state) {
+  if (state.tipoServico === 'motion') return 1200;
+  if (state.tipoServico === 'video') {
+    if (state.efeitosAnimacoes === 'complexos') return 900;
+    return 500;
   }
-  return valorTotal.toFixed(2).replace('.', ',');
+  return 400;
 }
-function calcularValorMotion(state) {
-  if (Number(state.tempoFinal) > 5) return 'Sob análise';
-  return '200,00';
+
+function showValidationMessage(message) {
+  let msg = document.createElement('div');
+  msg.className = "form-validation-message";
+  msg.textContent = message;
+  let container = document.getElementById('form-validation-message-container');
+  if (container) {
+    container.innerHTML = '';
+    container.appendChild(msg);
+  }
+}
+
+function clearValidationMessage() {
+  let container = document.getElementById('form-validation-message-container');
+  if (container) container.innerHTML = '';
 }
 
 const steps = [
+  // 1. Tipo de Serviço
   function stepTipoServico(state) {
     return `
       <div class="step active">
+        <div class="step-title">Tipo de Serviço</div>
         <label for="tipoServico">Qual tipo de serviço você deseja?</label>
         <select id="tipoServico" required>
           <option value="" disabled ${!state.tipoServico ? 'selected' : ''}>Selecione...</option>
           <option value="video" ${state.tipoServico === 'video' ? 'selected' : ''}>Edição de Vídeos</option>
           <option value="motion" ${state.tipoServico === 'motion' ? 'selected' : ''}>Motion Design</option>
         </select>
-        <button class="next" type="button" id="to-next-servico">Continuar</button>
       </div>
     `;
   },
-  function stepNomeEmail(state) {
+  // 2. Dados pessoais
+  function stepDadosPessoais(state) {
     return `
       <div class="step active">
+        <div class="step-title">Dados pessoais</div>
         <label for="nome">Seu nome:</label>
         <input type="text" id="nome" value="${state.nome || ''}" required>
-        <label for="email">Seu e-mail:</label>
+        <label for="email">Seu melhor e-mail:</label>
         <input type="email" id="email" value="${state.email || ''}" required>
-        <button class="next" type="button" id="to-step2">Próxima etapa</button>
       </div>
     `;
   },
-  function stepVideoQuestions(state) {
+  // 3. Público-alvo
+  function stepPublicoAlvo(state) {
     return `
       <div class="step active">
-        <label>1. O que você deseja comunicar? Qual seu público-alvo?</label>
-        <textarea id="mensagemPublico" rows="2" required>${state.mensagemPublico || ''}</textarea>
-
-        <label>2. Duração do vídeo bruto:</label>
-        <input type="text" id="duracaoBruto" placeholder="Ex: 5min" value="${state.duracaoBruto || ''}" required>
-
-        <label>Duração do vídeo final:</label>
-        <input type="text" id="duracaoFinal" placeholder="Ex: 1min30s" value="${state.duracaoFinal || ''}" required>
-
-        <label>3. Tem algum estilo específico de edição em mente? Envie 2 links de referência:</label>
+        <div class="step-title">Público-alvo</div>
+        <label for="mensagemPublico">O que você deseja comunicar?<br> Qual seu público-alvo?</label>
+        <textarea id="mensagemPublico" rows="3" required>${state.mensagemPublico || ''}</textarea>
+      </div>
+    `;
+  },
+  // 4. Tempo de vídeo
+  function stepTempoVideo(state) {
+    if (state.tipoServico === "video") {
+      return `
+        <div class="step active">
+          <div class="step-title">Tempo de vídeo</div>
+          <label>Duração do vídeo bruto:</label>
+          <input type="text" id="duracaoBruto" placeholder="Ex: 5min" value="${state.duracaoBruto || ''}" required>
+          <label>Duração do vídeo final:</label>
+          <input type="text" id="duracaoFinal" placeholder="Ex: 1min30s" value="${state.duracaoFinal || ''}" required>
+        </div>
+      `;
+    } else {
+      return `
+        <div class="step active">
+          <div class="step-title">Tempo de vídeo</div>
+          <label>Tempo final do vídeo (em segundos):</label>
+          <input type="number" id="tempoFinal" placeholder="ex: 30" min="1" max="600" value="${state.tempoFinal || ''}" required>
+        </div>
+      `;
+    }
+  },
+  // 5. Referências
+  function stepReferencias(state) {
+    return `
+      <div class="step active">
+        <div class="step-title">Referências</div>
+        <div class="dica">
+          Indique 2 links de vídeos ou animações que você gosta ou gostaria de se inspirar.<br>
+          <b>Por quê?</b> Isso ajuda a entender seu gosto, expectativa de ritmo, cores, linguagem ou efeitos desejados!
+        </div>
         <input type="url" id="ref1" placeholder="Link 1" value="${state.ref1 || ''}" required>
         <input type="url" id="ref2" placeholder="Link 2" value="${state.ref2 || ''}" required>
-
-        <label>4. Efeitos visuais e animações?</label>
-        <select id="efeitosAnimacoes">
-          <option value="" disabled ${!state.efeitosAnimacoes ? 'selected' : ''}>Selecione...</option>
-          <option value="nao" ${state.efeitosAnimacoes === 'nao' ? 'selected' : ''}>Não</option>
-          <option value="simples" ${state.efeitosAnimacoes === 'simples' ? 'selected' : ''}>Simples (animação de textos)</option>
-          <option value="complexos" ${state.efeitosAnimacoes === 'complexos' ? 'selected' : ''}>Complexos (efeitos especiais, objetos, cenário)</option>
-        </select>
-        ${(state.efeitosAnimacoes === 'simples' || state.efeitosAnimacoes === 'complexos') ? `
-          <div class="extra-options" style="margin-bottom:2px;">
-            <label>Descreva o tipo de efeito/animação desejado:</label>
-            <textarea id="descEfeitos" rows="2" required>${state.descEfeitos || ''}</textarea>
-            <div style="color:#40849e;font-weight:600;margin-top:6px;">
-              Orçamento estimado, sujeito a análise detalhada conforme complexidade.
-            </div>
-          </div>
-        ` : ''}
-
-        <label>5. Precisa de legendas?</label>
-        <select id="legenda">
-          <option value="" disabled ${!state.legenda ? 'selected' : ''}>Selecione...</option>
-          <option value="nao" ${state.legenda === 'nao' ? 'selected' : ''}>Não</option>
-          <option value="sim" ${state.legenda === 'sim' ? 'selected' : ''}>Sim</option>
-        </select>
-
-        <label>6. Possui identidade visual?</label>
-        <select id="identidadeVisual">
-          <option value="" disabled ${!state.identidadeVisual ? 'selected' : ''}>Selecione...</option>
-          <option value="nao" ${state.identidadeVisual === 'nao' ? 'selected' : ''}>Não</option>
-          <option value="sim" ${state.identidadeVisual === 'sim' ? 'selected' : ''}>Sim</option>
-        </select>
-        ${state.identidadeVisual === 'sim' ? `
-          <div class="extra-options" style="margin-bottom:2px;">
+      </div>
+    `;
+  },
+  // 6. Recursos Visuais (sem descrição de efeitos)
+  function stepRecursosVisuais(state) {
+    if (state.tipoServico === "video") {
+      return `
+        <div class="step active">
+          <div class="step-title">Recursos Visuais</div>
+          <label>Efeitos e animações</label>
+          <div class="dica">Deseja animações de texto, efeitos especiais, transições ou algo diferente?</div>
+          <select id="efeitosAnimacoes">
+            <option value="" disabled ${!state.efeitosAnimacoes ? 'selected' : ''}>Selecione...</option>
+            <option value="nao" ${state.efeitosAnimacoes === 'nao' ? 'selected' : ''}>Não</option>
+            <option value="simples" ${state.efeitosAnimacoes === 'simples' ? 'selected' : ''}>Simples (animação de textos)</option>
+            <option value="complexos" ${state.efeitosAnimacoes === 'complexos' ? 'selected' : ''}>Complexos (efeitos especiais, objetos, cenários)</option>
+          </select>
+          <label>Legendas</label>
+          <div class="dica">Precisa de legendas inseridas no vídeo?</div>
+          <select id="legenda">
+            <option value="" disabled ${!state.legenda ? 'selected' : ''}>Selecione...</option>
+            <option value="nao" ${state.legenda === 'nao' ? 'selected' : ''}>Não</option>
+            <option value="sim" ${state.legenda === 'sim' ? 'selected' : ''}>Sim</option>
+          </select>
+        </div>
+      `;
+    } else {
+      return `
+        <div class="step active">
+          <div class="step-title">Recursos Visuais</div>
+          <label>Explique o que tem em mente para o vídeo:</label>
+          <div class="dica">Conte a ideia, roteiro ou resultado esperado para a animação.</div>
+          <textarea id="descricao" rows="3" required>${state.descricao || ''}</textarea>
+        </div>
+      `;
+    }
+  },
+  // 7. Identidade visual
+  function stepIdentidadeVisual(state) {
+    if (state.tipoServico === "video") {
+      return `
+        <div class="step active">
+          <div class="step-title">Identidade visual</div>
+          <div class="dica">Tem logo, paleta de cores ou fontes próprias? Se sim, descreva ou envie depois por e-mail.</div>
+          <select id="identidadeVisual">
+            <option value="" disabled ${!state.identidadeVisual ? 'selected' : ''}>Selecione...</option>
+            <option value="nao" ${state.identidadeVisual === 'nao' ? 'selected' : ''}>Não</option>
+            <option value="sim" ${state.identidadeVisual === 'sim' ? 'selected' : ''}>Sim</option>
+          </select>
+          ${state.identidadeVisual === 'sim' ? `
             <label>Conte mais sobre sua identidade visual:</label>
             <textarea id="descIdentidade" rows="2" required>${state.descIdentidade || ''}</textarea>
-            <div style="color:#40849e;font-size:0.98em;margin-top:6px;">
-              <strong>Lembrete:</strong> envie os arquivos por e-mail após aprovar o orçamento.
-            </div>
-          </div>
-        ` : ''}
-
-       <label>7. Prazo de entrega <span style="font-weight:400">(mínimo 4 dias)</span>:</label>
-       <input type="date" id="prazoEntrega" value="${state.prazoEntrega || ''}" required>
-
-        <button class="back" type="button" id="to-step1">Voltar</button>
-        <button class="next" type="button" id="to-stepResumo">Ver orçamento</button>
-      </div>
-    `;
-  },
-  function stepMotionQuestions(state) {
-    return `
-      <div class="step active">
-        <label>1. O que você deseja comunicar? Qual seu público-alvo?</label>
-        <textarea id="mensagemPublico" rows="2" required>${state.mensagemPublico || ''}</textarea>
-
-        <label>2. Tempo final do vídeo (segundos):</label>
-        <input type="number" id="tempoFinal" placeholder="ex: 10" min="1" max="600" value="${state.tempoFinal || ''}" required>
-
-        <label>3. Tem algum estilo específico em mente? Envie 2 links de referência:</label>
-        <input type="url" id="ref1" placeholder="Link 1" value="${state.ref1 || ''}" required>
-        <input type="url" id="ref2" placeholder="Link 2" value="${state.ref2 || ''}" required>
-
-        <label>4. Possui identidade visual?</label>
-        <select id="identidadeVisualMotion">
-          <option value="" disabled ${!state.identidadeVisualMotion ? 'selected' : ''}>Selecione...</option>
-          <option value="nao" ${state.identidadeVisualMotion === 'nao' ? 'selected' : ''}>Não</option>
-          <option value="sim" ${state.identidadeVisualMotion === 'sim' ? 'selected' : ''}>Sim</option>
-        </select>
-        ${state.identidadeVisualMotion === 'sim' ? `
-          <div class="extra-options" style="margin-bottom:2px;">
-            <label>Conte mais sobre sua identidade visual (ou envie depois):</label>
-            <textarea id="descIdentidadeMotion" rows="2" required>${state.descIdentidadeMotion || ''}</textarea>
-            <div style="color:#40849e;font-size:0.98em;margin-top:6px;">
-              <strong>Lembrete:</strong> envie os arquivos por e-mail após aprovar o orçamento.
-            </div>
-          </div>
-        ` : ''}
-
-        <label>5. Explique o que tem em mente para o vídeo:</label>
-        <textarea id="descricao" rows="2" required>${state.descricao || ''}</textarea>
-
-        <label>6. Prazo de entrega <span style="font-weight:400">(mínimo 5 dias)</span>:</label>
-        <input type="date" id="prazoEntrega" value="${state.prazoEntrega || ''}" required>
-
-        <button class="back" type="button" id="to-step1">Voltar</button>
-        <button class="next" type="button" id="to-stepResumo">Ver orçamento</button>
-      </div>
-    `;
-  },
-  function stepResumo(state) {
-    const isVideo = state.tipoServico === 'video';
-    let orcamentoValor = '';
-    let analise = false;
-    if (isVideo) {
-      let valorFinal = calcularValorVideo(state);
-      orcamentoValor = `Valor estimado: <strong style="color:#40849e">R$ ${valorFinal}</strong>
-      <div style="color:#40849e; font-size:0.95em; margin-top:4px;">
-        Este valor é uma estimativa inicial e está sujeito a análise detalhada após o envio dos materiais.
-      </div>`;
+          ` : ''}
+        </div>
+      `;
     } else {
-      if (Number(state.tempoFinal) > 5) {
-        analise = true;
-        orcamentoValor = `
-          <div style="color:#40849e;font-weight:600;font-size:1.07em;margin:10px 0 6px;">
-            Para finalizar seu orçamento é necessária análise da sua solicitação, peço que me envie mais detalhes por <a href="mailto:danielescheibler@gmail.com" target="_blank">e-mail</a> ou <a href="https://wa.me/5551997523656" target="_blank">WhatsApp</a>.
-          </div>
-          <div style="text-align:center;margin:10px 0 4px;">
-            <img src="http://localhost:3000/please.gif" alt="Aguardo mais detalhes" style="max-width:210px;width:100%;border-radius:7px;">
-          </div>
-        `;
-      }
-      else orcamentoValor = `Valor estimado: <strong style="color:#40849e">R$ 200,00</strong>`;
+      return `
+        <div class="step active">
+          <div class="step-title">Identidade visual</div>
+          <div class="dica">Tem logo, paleta de cores ou fontes próprias? Se sim, descreva ou envie depois por e-mail.</div>
+          <select id="identidadeVisualMotion">
+            <option value="" disabled ${!state.identidadeVisualMotion ? 'selected' : ''}>Selecione...</option>
+            <option value="nao" ${state.identidadeVisualMotion === 'nao' ? 'selected' : ''}>Não</option>
+            <option value="sim" ${state.identidadeVisualMotion === 'sim' ? 'selected' : ''}>Sim</option>
+          </select>
+          ${state.identidadeVisualMotion === 'sim' ? `
+            <label>Conte mais sobre sua identidade visual:</label>
+            <textarea id="descIdentidadeMotion" rows="2" required>${state.descIdentidadeMotion || ''}</textarea>
+          ` : ''}
+        </div>
+      `;
     }
-    state.valorFinal = isVideo ? calcularValorVideo(state) : (analise ? 'Sob análise' : '200,00');
+  },
+  // 8. Resumo e envio
+  function stepResumoEnvio(state) {
+    const valor = calcularValor(state).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    const gifPath = "./please.gif";
 
-    return `
-      <div class="step active" id="resumo-step">
-        <h3 style="color:#40849e; text-align:left; margin-bottom:10px;">Resumo do orçamento</h3>
-        <div id="resumo-visual" style="background:#f2f2f2;color:#0d1215;border-radius:7px;padding:10px 11px 4px;margin-bottom:8px; border:1px solid #40849e;">
-          <strong>Nome:</strong> ${state.nome}<br>
-          <strong>E-mail:</strong> ${state.email}<br>
-          <strong>O que deseja comunicar/público:</strong> ${state.mensagemPublico}<br>
-          ${isVideo ? `
-            <strong>Duração bruto:</strong> ${state.duracaoBruto}<br>
-            <strong>Duração final:</strong> ${state.duracaoFinal}<br>
-            <strong>Referências:</strong>
-            <ul>
-              <li><a href="${state.ref1}" target="_blank">${state.ref1}</a></li>
-              <li><a href="${state.ref2}" target="_blank">${state.ref2}</a></li>
-            </ul>
-            <strong>Efeitos visuais e animações:</strong> ${state.efeitosAnimacoes === 'simples' ? 'Simples' : state.efeitosAnimacoes === 'complexos' ? 'Complexos' : 'Não'}<br>
-            ${(state.efeitosAnimacoes === 'simples' || state.efeitosAnimacoes === 'complexos') ? `<strong>Descrição dos efeitos:</strong> ${state.descEfeitos || ''}<br>` : ''}
-            <strong>Legendas:</strong> ${state.legenda === 'sim' ? 'Sim' : 'Não'}<br>
-            <strong>Identidade visual:</strong> ${state.identidadeVisual === 'sim' ? 'Sim' : 'Não'}<br>
-            ${state.identidadeVisual === 'sim' ? `<strong>Descrição identidade:</strong> ${state.descIdentidade || ''}<br>` : ''}
-            <strong>Prazo de entrega:</strong> ${state.prazoEntrega}<br>
-          ` : `
-            <strong>Tempo final:</strong> ${state.tempoFinal} segundos<br>
-            <strong>Referências:</strong>
-            <ul>
-              <li><a href="${state.ref1}" target="_blank">${state.ref1}</a></li>
-              <li><a href="${state.ref2}" target="_blank">${state.ref2}</a></li>
-            </ul>
-            <strong>Identidade visual:</strong> ${state.identidadeVisualMotion === 'sim' ? 'Sim' : 'Não'}<br>
-            ${state.identidadeVisualMotion === 'sim' ? `<strong>Descrição identidade:</strong> ${state.descIdentidadeMotion || ''}<br>` : ''}
-            <strong>Descrição:</strong> ${state.descricao}<br>
-            <strong>Prazo de entrega:</strong> ${state.prazoEntrega}<br>
-          `}
-          ${orcamentoValor}
+    let mensagemAvaliacao = '';
+    let gifMensagemHTML = '';
+
+    if (state.tipoServico === 'motion') {
+      gifMensagemHTML = `
+        <div style="display: flex; align-items: center; justify-content: center; gap: 18px; margin: 18px 0;">
+          <div style="color:#40849e; font-size:1em; text-align:left;">
+            Este valor é uma aproximação.<br>
+            Para orçamento final, envie para a editora analisar seu projeto detalhadamente!
+          </div>
+          <img src="${gifPath}" alt="Por favor, envie para avaliação" style="width:80px;max-width:90vw;border-radius:7px;"/>
         </div>
-        <div style="display:flex;justify-content:center;">
-          <button class="next" type="button" id="enviar-orcamento-email" style="background:#09BC8A; color:#fff; border-radius:4px; margin-bottom:10px;">✉️ Enviar orçamento por e-mail</button>
+      `;
+    } else if (state.tipoServico === 'video' && state.efeitosAnimacoes === 'complexos') {
+      gifMensagemHTML = `
+        <div style="display: flex; align-items: center; justify-content: center; gap: 18px; margin: 18px 0;">
+          <div style="color:#40849e; font-size:1em; text-align:left;">
+            Como você selecionou "efeitos e animações complexas",<br>
+            este valor é apenas uma referência.<br>
+            Envie para a editora analisar e fornecer uma proposta personalizada.
+          </div>
+          <img src="${gifPath}" alt="Por favor, envie para avaliação" style="width:80px;max-width:90vw;border-radius:7px;"/>
         </div>
-       </div>
+      `;
+    } else {
+      mensagemAvaliacao = `
+        <div style="color:#40849e; font-size:0.92em; margin-top:8px;">
+          Este valor é uma aproximação e pode variar após avaliação detalhada da editora. ✨
+        </div>
+      `;
+      gifMensagemHTML = '';
+    }
+
+    let resumoHtml = `
+      <div class="step active">
+        <div class="step-title">Resumo do orçamento</div>
+        <div class="resumo-quadro" style="background:#f2f2f2;color:#0d1215;border-radius:7px;padding:10px 11px;margin-bottom:12px; border:1px solid #40849e;">
+          <strong>Nome:</strong> ${state.nome || ''}<br>
+          <strong>E-mail:</strong> ${state.email || ''}<br>
+          <strong>Público-alvo/objetivo:</strong> ${state.mensagemPublico || ''}<br>
     `;
+    if(state.tipoServico === "video") {
+      resumoHtml += `
+        <strong>Duração bruto:</strong> ${state.duracaoBruto || ''}<br>
+        <strong>Duração final:</strong> ${state.duracaoFinal || ''}<br>
+      `;
+    } else {
+      resumoHtml += `
+        <strong>Tempo final:</strong> ${state.tempoFinal || ''} segundos<br>
+      `;
+    }
+    resumoHtml += `
+        <strong>Referências:</strong>
+        <ul>
+          <li><a href="${state.ref1 || '#'}" target="_blank">${state.ref1 || ''}</a></li>
+          <li><a href="${state.ref2 || '#'}" target="_blank">${state.ref2 || ''}</a></li>
+        </ul>
+    `;
+    if(state.tipoServico === "video") {
+      resumoHtml += `
+        <strong>Efeitos:</strong> ${state.efeitosAnimacoes || ''}<br>
+        <strong>Legenda:</strong> ${state.legenda || ''}<br>
+        <strong>Identidade visual:</strong> ${state.identidadeVisual || ''}<br>
+        ${state.identidadeVisual === 'sim' ? `<strong>Descrição identidade:</strong> ${state.descIdentidade || ''}<br>` : ''}
+      `;
+    } else {
+      resumoHtml += `
+        <strong>Identidade visual:</strong> ${state.identidadeVisualMotion || ''}<br>
+        ${state.identidadeVisualMotion === 'sim' ? `<strong>Descrição identidade:</strong> ${state.descIdentidadeMotion || ''}<br>` : ''}
+        <strong>Descrição:</strong> ${state.descricao || ''}<br>
+      `;
+    }
+    resumoHtml += `
+      <div style="margin-top:14px;">
+        <strong style="color:#40849e;font-size:1.2em;">Valor estimado: ${valor}</strong>
+      </div>
+      </div>
+      <div class="form-buttons" style="justify-content:center;gap:12px;">
+        <button class="back" id="voltar-btn" type="button">Voltar</button>
+        <button class="next" id="enviar-btn" type="button">Enviar Orçamento</button>
+      </div>
+      <div id="form-validation-message-container"></div>
+      ${gifMensagemHTML || mensagemAvaliacao}
+    </div>
+    `;
+    return resumoHtml;
   }
 ];
 
 function renderStep() {
+  renderProgressBar(currentStep);
+
   const wizard = document.getElementById('wizard');
-  let s = state.tipoServico, v = steps, stepIndex = currentStep;
-  if (stepIndex === 0) {
-    wizard.innerHTML = v[0](state);
+  wizard.innerHTML = steps[currentStep](state);
+
+  // Adiciona listeners aos campos de cada etapa
+  if (currentStep === 0) {
     document.getElementById('tipoServico').onchange = e => { state.tipoServico = e.target.value; };
-    document.getElementById('to-next-servico').onclick = () => {
-      if (!state.tipoServico) { showResult("Escolha uma opção para continuar"); return; }
-      currentStep = 1; renderStep();
-    };
-    return;
   }
-  if (stepIndex === 1) {
-    wizard.innerHTML = v[1](state);
+  if (currentStep === 1) {
     document.getElementById('nome').oninput = e => { state.nome = e.target.value; };
     document.getElementById('email').oninput = e => { state.email = e.target.value; };
-    document.getElementById('to-step2').onclick = () => {
-      if (!state.nome || !state.email) { showResult("Preencha nome e e-mail."); return; }
-      currentStep = 2; renderStep();
-    };
-    return;
   }
-  if (s === 'video') {
-    if (stepIndex === 2) {
-      wizard.innerHTML = v[2](state);
-      document.getElementById('mensagemPublico').oninput = e => { state.mensagemPublico = e.target.value; };
+  if (currentStep === 2) {
+    document.getElementById('mensagemPublico').oninput = e => { state.mensagemPublico = e.target.value; };
+  }
+  if (currentStep === 3) {
+    if (state.tipoServico === 'video') {
       document.getElementById('duracaoBruto').oninput = e => { state.duracaoBruto = e.target.value; };
       document.getElementById('duracaoFinal').oninput = e => { state.duracaoFinal = e.target.value; };
-      document.getElementById('ref1').oninput = e => { state.ref1 = e.target.value; };
-      document.getElementById('ref2').oninput = e => { state.ref2 = e.target.value; };
-      document.getElementById('efeitosAnimacoes').onchange = e => { state.efeitosAnimacoes = e.target.value; renderStep(); };
-      if (state.efeitosAnimacoes === 'simples' || state.efeitosAnimacoes === 'complexos') {
-        document.getElementById('descEfeitos').oninput = e => { state.descEfeitos = e.target.value; };
-      }
+    } else {
+      document.getElementById('tempoFinal').oninput = e => { state.tempoFinal = e.target.value; };
+    }
+  }
+  if (currentStep === 4) {
+    document.getElementById('ref1').oninput = e => { state.ref1 = e.target.value; };
+    document.getElementById('ref2').oninput = e => { state.ref2 = e.target.value; };
+  }
+  if (currentStep === 5) {
+    if (state.tipoServico === 'video') {
+      document.getElementById('efeitosAnimacoes').onchange = e => { state.efeitosAnimacoes = e.target.value; };
       document.getElementById('legenda').onchange = e => { state.legenda = e.target.value; };
+    } else {
+      document.getElementById('descricao').oninput = e => { state.descricao = e.target.value; };
+    }
+  }
+  if (currentStep === 6) {
+    if (state.tipoServico === 'video') {
       document.getElementById('identidadeVisual').onchange = e => { state.identidadeVisual = e.target.value; renderStep(); };
       if (state.identidadeVisual === 'sim') {
         document.getElementById('descIdentidade').oninput = e => { state.descIdentidade = e.target.value; };
       }
-      document.getElementById('prazoEntrega').oninput = e => { state.prazoEntrega = e.target.value; };
-      document.getElementById('to-step1').onclick = () => { currentStep = 1; renderStep(); };
-      document.getElementById('to-stepResumo').onclick = () => {
-        if (!state.mensagemPublico || !state.duracaoBruto || !state.duracaoFinal || !state.ref1 || !state.ref2 || !state.efeitosAnimacoes || !state.legenda || !state.identidadeVisual || !state.prazoEntrega) {
-          showResult("Preencha todos os campos obrigatórios.");
-          return;
-        }
-        if ((state.efeitosAnimacoes === 'simples' || state.efeitosAnimacoes === 'complexos') && !state.descEfeitos) {
-          showResult("Descreva os efeitos desejados!");
-          return;
-        }
-        if (state.identidadeVisual === 'sim' && !state.descIdentidade) {
-          showResult("Fale sobre sua identidade visual!");
-          return;
-        }
-        currentStep = 4; renderStep();
-      };
-      return;
-    }
-  } else if (s === 'motion') {
-    if (stepIndex === 2) {
-      wizard.innerHTML = v[3](state);
-      document.getElementById('mensagemPublico').oninput = e => { state.mensagemPublico = e.target.value; };
-      document.getElementById('tempoFinal').oninput = e => { state.tempoFinal = e.target.value; };
-      document.getElementById('ref1').oninput = e => { state.ref1 = e.target.value; };
-      document.getElementById('ref2').oninput = e => { state.ref2 = e.target.value; };
+    } else {
       document.getElementById('identidadeVisualMotion').onchange = e => { state.identidadeVisualMotion = e.target.value; renderStep(); };
       if (state.identidadeVisualMotion === 'sim') {
         document.getElementById('descIdentidadeMotion').oninput = e => { state.descIdentidadeMotion = e.target.value; };
       }
-      document.getElementById('descricao').oninput = e => { state.descricao = e.target.value; };
-      document.getElementById('prazoEntrega').oninput = e => { state.prazoEntrega = e.target.value; };
-      document.getElementById('to-step1').onclick = () => { currentStep = 1; renderStep(); };
-      document.getElementById('to-stepResumo').onclick = () => {
-        if (!state.mensagemPublico || !state.tempoFinal || !state.ref1 || !state.ref2 || !state.identidadeVisualMotion || !state.descricao || !state.prazoEntrega) {
-          showResult("Preencha todos os campos obrigatórios.");
-          return;
-        }
-        if (state.identidadeVisualMotion === 'sim' && !state.descIdentidadeMotion) {
-          showResult("Fale sobre sua identidade visual!");
-          return;
-        }
-        currentStep = 4; renderStep();
-      };
-      return;
     }
   }
-  if (stepIndex === 4) {
-    wizard.innerHTML = v[4](state);
-    const btnEmail = document.getElementById('enviar-orcamento-email');
-    if (btnEmail) btnEmail.onclick = async () => {
-      showResult("Enviando orçamento por e-mail...");
-      try {
-        const resp = await fetch('http://localhost:3000/enviar-orcamento', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(state)
-        });
-        const json = await resp.json();
-        if (resp.ok) {
-          showResult("Orçamento enviado por e-mail", "#09BC8A");
-          setTimeout(() => {
-            currentStep = 0;
-            state = { tipoServico: null };
-            renderStep();
-          }, 2000);
-        } else {
-          showResult("Erro ao enviar: " + (json.mensagem || "Tente novamente."), "#D8000C");
-        }
-      } catch (err) {
-        showResult("Erro de conexão. Tente novamente.", "#D8000C");
-      }
+  if (currentStep === 7) {
+    document.getElementById('enviar-btn').onclick = async () => {
+      await enviarOrcamento(state);
+      document.getElementById('wizard').innerHTML = `
+        <div class="step active" style="text-align:center;">
+          <div style="color:#40849e;font-size:1.18em;font-weight:600;padding:32px 0 24px 0;">
+            Orçamento enviado por e-mail.<br>Obrigada pelo interesse! 
+          </div>
+        </div>
+      `;
+      document.getElementById('progress-bar').innerHTML = '';
     };
+    document.getElementById('voltar-btn').onclick = () => {
+      currentStep -= 1;
+      renderStep();
+    };
+    return;
+  }
+
+  // Botões para as etapas anteriores (exceto na última)
+  if (currentStep < steps.length - 1) {
+    let formButtons = document.createElement('div');
+    formButtons.className = "form-buttons";
+    if (currentStep > 0) {
+      let btnBack = document.createElement('button');
+      btnBack.className = "back";
+      btnBack.type = "button";
+      btnBack.textContent = "Voltar";
+      btnBack.onclick = () => {
+        clearValidationMessage();
+        currentStep -= 1;
+        renderStep();
+      };
+      formButtons.appendChild(btnBack);
+    }
+    let btnNext = document.createElement('button');
+    btnNext.className = "next";
+    btnNext.type = "button";
+    btnNext.textContent = "Próximo";
+    btnNext.onclick = () => {
+      // Validação dos campos obrigatórios para a etapa atual
+      let valid = true;
+      if (currentStep === 0 && !state.tipoServico) valid = false;
+      if (currentStep === 1 && (!state.nome || !state.email)) valid = false;
+      if (currentStep === 2 && !state.mensagemPublico) valid = false;
+      if (currentStep === 3) {
+        if (state.tipoServico === "video") {
+          if (!state.duracaoBruto || !state.duracaoFinal) valid = false;
+        } else {
+          if (!state.tempoFinal) valid = false;
+        }
+      }
+      if (currentStep === 4 && (!state.ref1 || !state.ref2)) valid = false;
+      if (currentStep === 5) {
+        if (state.tipoServico === "video") {
+          if (!state.efeitosAnimacoes || !state.legenda) valid = false;
+        } else {
+          if (!state.descricao) valid = false;
+        }
+      }
+      if (currentStep === 6) {
+        if (state.tipoServico === "video") {
+          if (!state.identidadeVisual) valid = false;
+          if (state.identidadeVisual === 'sim' && !state.descIdentidade) valid = false;
+        } else {
+          if (!state.identidadeVisualMotion) valid = false;
+          if (state.identidadeVisualMotion === 'sim' && !state.descIdentidadeMotion) valid = false;
+        }
+      }
+      clearValidationMessage();
+      if (!valid) {
+        // Mostra mensagem abaixo dos botões, não como popup
+        showValidationMessage('Quer orçamento? Preenche aí primeiro. 👀');
+        return;
+      }
+      currentStep += 1;
+      renderStep();
+    };
+    formButtons.appendChild(btnNext);
+    wizard.appendChild(formButtons);
+
+    // Mensagem de validação (container)
+    let valMsgDiv = document.createElement('div');
+    valMsgDiv.id = "form-validation-message-container";
+    formButtons.parentNode.insertBefore(valMsgDiv, formButtons.nextSibling);
   }
 }
 
-function showResult(msg, cor) {
-  const res = document.getElementById('result');
-  res.innerHTML = msg;
-  res.style.color = cor || "#40849e";
-  if (msg) setTimeout(() => { res.innerHTML = ""; }, 8000);
+// Envio do orçamento para o backend (garantindo todos os campos)
+async function enviarOrcamento(dados) {
+  // Validação básica dos campos obrigatórios
+  if (!dados.email || !dados.nome || !dados.tipoServico) {
+    showValidationMessage('Preencha todos os campos obrigatórios!');
+    return;
+  }
+
+  // Certifique-se de enviar todos os campos, mesmo os opcionais (use '' como valor default)
+  const payload = {
+    ...dados,
+    efeitosAnimacoes: dados.efeitosAnimacoes || '',
+    legenda: dados.legenda || '',
+    identidadeVisual: dados.identidadeVisual || '',
+    identidadeVisualMotion: dados.identidadeVisualMotion || '',
+    descIdentidade: dados.descIdentidade || '',
+    descIdentidadeMotion: dados.descIdentidadeMotion || '',
+    descricao: dados.descricao || '',
+    duracaoBruto: dados.duracaoBruto || '',
+    duracaoFinal: dados.duracaoFinal || '',
+    tempoFinal: dados.tempoFinal || '',
+    ref1: dados.ref1 || '',
+    ref2: dados.ref2 || '',
+    mensagemPublico: dados.mensagemPublico || '',
+    nome: dados.nome || '',
+    email: dados.email || '',
+  };
+
+  try {
+    const response = await fetch('/enviar-orcamento', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const result = await response.json();
+    if (result.ok) {
+      alert('Orçamento enviado com sucesso!');
+    } else {
+      alert('Erro ao enviar: ' + result.mensagem);
+    }
+  } catch (e) {
+    alert('Erro de conexão!');
+  }
 }
 
+// Sempre começa na etapa inicial (tipo de serviço)
 window.onload = () => {
   currentStep = 0;
   state = { tipoServico: null };

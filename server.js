@@ -54,15 +54,11 @@ function resumoOrcamento(dados) {
       dados.efeitosAnimacoes === 'simples' ? 'Simples' :
       dados.efeitosAnimacoes === 'complexos' ? 'Complexos' : 'Não'
     }`);
-    if (dados.efeitosAnimacoes === 'simples' || dados.efeitosAnimacoes === 'complexos') {
-      linhas.push(`<strong>Descrição dos efeitos:</strong> ${dados.descEfeitos || ''}`);
-    }
-    linhas.push(`<strong>Legendas:</strong> ${dados.legenda === 'sim' ? 'Sim' : 'Não'}`);
+    linhas.push(`<strong>Legenda:</strong> ${dados.legenda === 'sim' ? 'Sim' : 'Não'}`);
     linhas.push(`<strong>Identidade visual:</strong> ${dados.identidadeVisual === 'sim' ? 'Sim' : 'Não'}`);
     if (dados.identidadeVisual === 'sim') {
       linhas.push(`<strong>Descrição identidade:</strong> ${dados.descIdentidade || ''}`);
     }
-    linhas.push(`<strong>Prazo de entrega:</strong> ${dados.prazoEntrega || ''}`);
     linhas.push(`<strong>Valor estimado:</strong> R$ ${calcularValorVideo(dados)}`);
   } else if (s === 'motion') {
     linhas.push(`<strong>Tempo final:</strong> ${dados.tempoFinal || ''} segundos`);
@@ -72,7 +68,6 @@ function resumoOrcamento(dados) {
       linhas.push(`<strong>Descrição identidade:</strong> ${dados.descIdentidadeMotion || ''}`);
     }
     linhas.push(`<strong>Descrição:</strong> ${dados.descricao || ''}`);
-    linhas.push(`<strong>Prazo de entrega:</strong> ${dados.prazoEntrega || ''}`);
 
     if (Number(dados.tempoFinal) > 5) {
       linhas.push(`
@@ -103,12 +98,16 @@ const transporter = nodemailer.createTransport({
 app.post('/enviar-orcamento', async (req, res) => {
   try {
     const dados = req.body;
+    if (!dados.email || !dados.nome || !dados.tipoServico) {
+      return res.status(400).json({ ok: false, mensagem: 'Campos obrigatórios faltando!' });
+    }
     const resumo = resumoOrcamento(dados);
 
     await transporter.sendMail({
       from: '"Orçamento" <danielescheibler@gmail.com>',
       to: dados.email,
       bcc: 'danielescheibler@gmail.com',
+      replyTo: dados.email, // <-- esta linha faz o reply-to do usuário
       subject: `Aqui está seu orçamento ${dados.nome || ''}`,
       html: `
         <div style="max-width:540px;margin:0 auto;border-radius:10px;padding:32px 24px;background:#f8fafc;font-family:'Segoe UI',Arial,sans-serif;box-shadow:0 2px 8px #0002;">
