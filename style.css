@@ -183,6 +183,8 @@ textarea {
   font-size: 1em;
   margin-bottom: 8px;
   transition: border 0.17s;
+  box-sizing: border-box;
+  /* Garante que o padding não estoura o limite no mobile */
 }
 input:focus,
 select:focus,
@@ -434,6 +436,33 @@ button[disabled] {
     max-height: calc(1.22em * 3 + 14px);
     overflow-y: auto;
   }
+  /* Ajuste containers principais do formulário */
+  .right-col,
+  .main-wrapper,
+  .left-block {
+    max-width: 100vw;
+    width: 100vw;
+    box-sizing: border-box;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  /* Ajuste campos das etapas Referências e Identidade Visual */
+  #ref1, #ref2,
+  #descIdentidade, #descIdentidadeMotion,
+  textarea, input[type="text"], input[type="email"], input[type="number"], input[type="url"], select {
+    max-width: 94vw;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+    box-sizing: border-box;
+  }
+  /* Garante que o wizard tenha espaçamento lateral */
+  #wizard {
+    padding-left: 3vw;
+    padding-right: 3vw;
+    box-sizing: border-box;
+  }
 }
 /* Links */
 a, a:visited {
@@ -453,31 +482,4 @@ a:hover {
   line-height: 1.25;
   font-style: italic;
   margin: 0;
-}
-@media (max-width: 600px) {
-  #wizard {
-    padding-left: 3vw;
-    padding-right: 3vw;
-    box-sizing: border-box;
-  }
-}
-@media (max-width: 600px) {
-  #ref1, #ref2 {
-    max-width: 94vw;
-    width: 100%;
-    margin-left: auto;
-    margin-right: auto;
-    display: block;
-    box-sizing: border-box;
-  }
-}
-@media (max-width: 600px) {
-  #descIdentidade, #descIdentidadeMotion {
-    max-width: 94vw;
-    width: 100%;
-    margin-left: auto;
-    margin-right: auto;
-    display: block;
-    box-sizing: border-box;
-  }
 }
