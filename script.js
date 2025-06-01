@@ -15,10 +15,10 @@ function renderProgressBar(currentStep) {
       </div>
     `;
   }
-  document.getElementById('progress-bar').innerHTML = progressHTML;
+  const progressBar = document.getElementById('progress-bar');
+  if(progressBar) progressBar.innerHTML = progressHTML;
 }
 
-// Função para calcular o valor aproximado
 function calcularValor(state) {
   if (state.tipoServico === 'motion') return 1200;
   if (state.tipoServico === 'video') {
@@ -29,16 +29,11 @@ function calcularValor(state) {
 }
 
 function showValidationMessage(message) {
-  let msg = document.createElement('div');
-  msg.className = "form-validation-message";
-  msg.textContent = message;
   let container = document.getElementById('form-validation-message-container');
   if (container) {
-    container.innerHTML = '';
-    container.appendChild(msg);
+    container.innerHTML = `<div class="form-validation-message">${message}</div>`;
   }
 }
-
 function clearValidationMessage() {
   let container = document.getElementById('form-validation-message-container');
   if (container) container.innerHTML = '';
@@ -287,11 +282,15 @@ function renderStep() {
   renderProgressBar(currentStep);
 
   const wizard = document.getElementById('wizard');
+  if (!wizard) return;
+
   wizard.innerHTML = steps[currentStep](state);
 
   // Adiciona listeners aos campos de cada etapa
   if (currentStep === 0) {
-    document.getElementById('tipoServico').onchange = e => { state.tipoServico = e.target.value; };
+    document.getElementById('tipoServico').onchange = e => { 
+      state.tipoServico = e.target.value; 
+    };
   }
   if (currentStep === 1) {
     document.getElementById('nome').oninput = e => { state.nome = e.target.value; };
@@ -322,12 +321,18 @@ function renderStep() {
   }
   if (currentStep === 6) {
     if (state.tipoServico === 'video') {
-      document.getElementById('identidadeVisual').onchange = e => { state.identidadeVisual = e.target.value; renderStep(); };
+      document.getElementById('identidadeVisual').onchange = e => { 
+        state.identidadeVisual = e.target.value; 
+        renderStep(); 
+      };
       if (state.identidadeVisual === 'sim') {
         document.getElementById('descIdentidade').oninput = e => { state.descIdentidade = e.target.value; };
       }
     } else {
-      document.getElementById('identidadeVisualMotion').onchange = e => { state.identidadeVisualMotion = e.target.value; renderStep(); };
+      document.getElementById('identidadeVisualMotion').onchange = e => { 
+        state.identidadeVisualMotion = e.target.value; 
+        renderStep(); 
+      };
       if (state.identidadeVisualMotion === 'sim') {
         document.getElementById('descIdentidadeMotion').oninput = e => { state.descIdentidadeMotion = e.target.value; };
       }
@@ -373,15 +378,16 @@ function renderStep() {
     btnNext.type = "button";
     btnNext.textContent = "Próximo";
     btnNext.onclick = () => {
-      // Validação dos campos obrigatórios para a etapa atual
       let valid = true;
       clearValidationMessage();
 
-      if (currentStep === 0 && !state.tipoServico) valid = false;
+      if (currentStep === 0 && !state.tipoServico) {
+        showValidationMessage('Selecione o tipo de serviço para continuar.');
+        return;
+      }
       if (currentStep === 1 && (!state.nome || !state.email)) valid = false;
       if (currentStep === 2 && !state.mensagemPublico) valid = false;
       if (currentStep === 3) {
-        // NOVA VALIDAÇÃO: só aceita números, mostra mensagem abaixo do campo e não avança
         if (state.tipoServico === "video") {
           const duracaoBruto = Number(state.duracaoBruto);
           const duracaoFinal = Number(state.duracaoFinal);
@@ -453,22 +459,17 @@ function renderStep() {
     formButtons.appendChild(btnNext);
     wizard.appendChild(formButtons);
 
-    // Mensagem de validação (container)
     let valMsgDiv = document.createElement('div');
     valMsgDiv.id = "form-validation-message-container";
     formButtons.parentNode.insertBefore(valMsgDiv, formButtons.nextSibling);
   }
 }
 
-// Envio do orçamento para o backend (garantindo todos os campos)
 async function enviarOrcamento(dados) {
-  // Validação básica dos campos obrigatórios
   if (!dados.email || !dados.nome || !dados.tipoServico) {
-    showValidationMessage('Preencha todos os campos obrigatórios!');
+    showValidationMessage('Quer orçamento? Preenche aí primeiro. 👀');
     return;
   }
-
-  // Certifique-se de enviar todos os campos, mesmo os opcionais (use '' como valor default)
   const payload = {
     ...dados,
     efeitosAnimacoes: dados.efeitosAnimacoes || '',
@@ -505,7 +506,6 @@ async function enviarOrcamento(dados) {
   }
 }
 
-// Sempre começa na etapa inicial (tipo de serviço)
 window.onload = () => {
   currentStep = 0;
   state = { tipoServico: null };
