@@ -1,12 +1,25 @@
-const express = require('express');
-const cors = require('cors');
-const nodemailer = require('nodemailer');
-const path = require('path');
+import express from 'express';
+import cors from 'cors';
+import nodemailer from 'nodemailer';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 app.use(express.json());
 app.use(cors());
-app.use(express.static(__dirname)); // Serve please.gif e outros arquivos estáticos
+
+// Serve diretório public
+app.use(express.static(path.join(__dirname, 'public')));
+
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: 'danielescheibler@gmail.com',
+    pass: 'yfci gdkt kjxn trkb'
+  }
+});
 
 function minutosParaSegundos(str) {
   if (!str) return 0;
@@ -86,15 +99,6 @@ function resumoOrcamento(dados) {
   return linhas.join('<br>');
 }
 
-// Configure seu transporter conforme seu serviço de e-mail:
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: 'danielescheibler@gmail.com',
-    pass: 'yfci gdkt kjxn trkb'
-  }
-});
-
 app.post('/enviar-orcamento', async (req, res) => {
   try {
     const dados = req.body;
@@ -107,7 +111,7 @@ app.post('/enviar-orcamento', async (req, res) => {
       from: '"Orçamento" <danielescheibler@gmail.com>',
       to: dados.email,
       bcc: 'danielescheibler@gmail.com',
-      replyTo: dados.email, // <-- esta linha faz o reply-to do usuário
+      replyTo: dados.email,
       subject: `Aqui está seu orçamento ${dados.nome || ''}`,
       html: `
         <div style="max-width:540px;margin:0 auto;border-radius:10px;padding:32px 24px;background:#f8fafc;font-family:'Segoe UI',Arial,sans-serif;box-shadow:0 2px 8px #0002;">

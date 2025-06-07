@@ -1,22 +1,14 @@
 {
   "name": "orcamento-video",
   "version": "1.0.0",
-  "main": "script.js",
+  "main": "server.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/danielescheibler/orcamento-video.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
-  "bugs": {
-    "url": "https://github.com/danielescheibler/orcamento-video/issues"
-  },
-  "homepage": "https://github.com/danielescheibler/orcamento-video#readme",
-  "description": ""
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "nodemailer": "^6.9.11"
+  }
 }
