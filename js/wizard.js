@@ -10,16 +10,89 @@ const totalSteps = steps.length;
 function renderStep() {
   renderProgressBar(currentStep, totalSteps);
 
+  // --- Ajuste para progress bar descer na etapa 0 mobile ---
+  const progressBar = document.getElementById('progress-bar');
+  if (progressBar) {
+    if (window.innerWidth <= 600 && currentStep === 0) {
+      progressBar.classList.add('step0-mobile-bar');
+    } else {
+      progressBar.classList.remove('step0-mobile-bar');
+    }
+  }
+  // ---------------------------------------------------------
+
   const wizard = document.getElementById('wizard');
   if (!wizard) return;
 
   wizard.innerHTML = steps[currentStep](state);
 
-  // Listeners (igual ao exemplo anterior)
+  // Adiciona/remover classe especial para a etapa 0 mobile
+  const formContainer = wizard.parentElement;
+  if (window.innerWidth <= 600) {
+    if (currentStep === 0) {
+      formContainer.classList.add('step0-mobile');
+    } else {
+      formContainer.classList.remove('step0-mobile');
+    }
+  } else {
+    formContainer.classList.remove('step0-mobile');
+  }
+
+  // Esconde topo no mobile após escolha do tipo de serviço
+  if (window.innerWidth <= 600) {
+    if (currentStep > 0) {
+      // Esconde o topo e expande o formulário
+      const layoutLeft = document.querySelector('.layout-left');
+      const layoutRight = document.querySelector('.layout-right');
+      if (layoutLeft) layoutLeft.style.display = 'none';
+      if (layoutRight) {
+        layoutRight.style.width = '100vw';
+        layoutRight.style.maxWidth = '100vw';
+      }
+    } else if (currentStep === 0) {
+      // Mostra topo e reseta layout
+      const layoutLeft = document.querySelector('.layout-left');
+      const layoutRight = document.querySelector('.layout-right');
+      if (layoutLeft) layoutLeft.style.display = '';
+      if (layoutRight) {
+        layoutRight.style.width = '';
+        layoutRight.style.maxWidth = '';
+      }
+    }
+  }
+
+  // Etapa 0: listeners para select (desktop) e botões (mobile)
   if (currentStep === 0) {
-    document.getElementById('tipoServico').onchange = e => { 
-      state.tipoServico = e.target.value; 
-    };
+    // DESKTOP: select
+    const selectTipo = document.getElementById('tipoServico');
+    if (selectTipo) {
+      selectTipo.onchange = e => { 
+        state.tipoServico = e.target.value; 
+        // No desktop, não avança automaticamente
+      };
+    }
+
+    // MOBILE: botões
+    const optionBtns = document.querySelectorAll('.option-btn');
+    if (optionBtns.length) {
+      optionBtns.forEach(btn => {
+        btn.onclick = () => {
+          state.tipoServico = btn.getAttribute('data-value');
+          // Esconde topo no mobile ao avançar
+          if (window.innerWidth <= 600) {
+            const layoutLeft = document.querySelector('.layout-left');
+            const layoutRight = document.querySelector('.layout-right');
+            if (layoutLeft) layoutLeft.style.display = 'none';
+            if (layoutRight) {
+              layoutRight.style.width = '100vw';
+              layoutRight.style.maxWidth = '100vw';
+            }
+          }
+          currentStep += 1;
+          renderStep();
+        };
+      });
+    }
   }
   if (currentStep === 1) {
     document.getElementById('nome').oninput = e => { state.nome = e.target.value; };
@@ -83,6 +156,16 @@ function renderStep() {
     };
     document.getElementById('voltar-btn').onclick = () => {
       currentStep -= 1;
+      // Se voltar para etapa 0, reexibe topo (mobile)
+      if (currentStep === 0 && window.innerWidth <= 600) {
+        const layoutLeft = document.querySelector('.layout-left');
+        const layoutRight = document.querySelector('.layout-right');
+        if (layoutLeft) layoutLeft.style.display = '';
+        if (layoutRight) {
+          layoutRight.style.width = '';
+          layoutRight.style.maxWidth = '';
+        }
+      }
       renderStep();
     };
     return;
@@ -100,6 +183,16 @@ function renderStep() {
       btnBack.onclick = () => {
         clearValidationMessage();
         currentStep -= 1;
+        // Se voltar para etapa 0, reexibe topo (mobile)
+        if (currentStep === 0 && window.innerWidth <= 600) {
+          const layoutLeft = document.querySelector('.layout-left');
+          const layoutRight = document.querySelector('.layout-right');
+          if (layoutLeft) layoutLeft.style.display = '';
+          if (layoutRight) {
+            layoutRight.style.width = '';
+            layoutRight.style.maxWidth = '';
+          }
+        }
         renderStep();
       };
       formButtons.appendChild(btnBack);
@@ -116,16 +209,30 @@ function renderStep() {
         return;
       }
       currentStep += 1;
+      // Se avançar para etapa 1 no mobile, esconde topo
+      if (currentStep > 0 && window.innerWidth <= 600) {
+        const layoutLeft = document.querySelector('.layout-left');
+        const layoutRight = document.querySelector('.layout-right');
+        if (layoutLeft) layoutLeft.style.display = 'none';
+        if (layoutRight) {
+          layoutRight.style.width = '100vw';
+          layoutRight.style.maxWidth = '100vw';
+        }
+      }
       renderStep();
     };
     formButtons.appendChild(btnNext);
     wizard.appendChild(formButtons);
 
+ 
+      formButtons.insertAdjacentElement("afterend", socialBelow);
+    }
+
     let valMsgDiv = document.createElement('div');
     valMsgDiv.id = "form-validation-message-container";
     formButtons.parentNode.insertBefore(valMsgDiv, formButtons.nextSibling);
   }
-}
+
 
 window.onload = () => {
   currentStep = 0;

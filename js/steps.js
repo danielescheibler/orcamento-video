@@ -20,21 +20,7 @@ export const steps = [
           <button class="option-btn" data-value="video">Edição de Vídeos</button>
           <button class="option-btn" data-value="motion">Motion Design</button>
         </div>
-        <nav class="social-container social-footer-below">
-          <a aria-label="LinkedIn" href="https://www.linkedin.com/in/danielescheibler/" target="_blank" rel="noopener">
-            <i class="fab fa-linkedin-in"></i>
-          </a>
-          <a aria-label="Instagram" href="https://www.instagram.com/danieles.designer/" target="_blank" rel="noopener">
-            <i class="fab fa-instagram"></i>
-          </a>
-          <a aria-label="GitHub" href="https://github.com/danielescheibler" target="_blank" rel="noopener">
-            <i class="fab fa-github"></i>
-          </a>
-          <a aria-label="E-mail" href="mailto:danielescheibler@gmail.com" target="_blank" rel="noopener">
-            <i class="fas fa-envelope"></i>
-          </a>
-        </nav>
-      `;
+             `;
     }
 
     // DESKTOP: mantém select
