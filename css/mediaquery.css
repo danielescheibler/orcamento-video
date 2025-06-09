@@ -66,7 +66,7 @@
   .form-container input,
   .form-container textarea {
     font-size: 1.08em;
-    padding: 10px 12px;
+    padding: 10px 0;
     margin-bottom: 10px;
     width: 100%;
     box-sizing: border-box;
@@ -95,6 +95,9 @@
 }
 
 @media (max-width: 600px) {
+  .main-layout {
+    padding: 0 !important;
+  }
   .layout-left,
   .layout-right {
     padding: 0 2vw 0 2vw !important;
@@ -153,13 +156,14 @@
   }
   #progress-bar {
     margin-top: 10px !important;
-    margin-bottom: 10px  !important;
+    margin-bottom: 10px !important;
   }
   #progress-bar.step0-mobile-bar {
-    margin-top: 60px !important;
+    margin-top: 30px !important;
   }
   .footer-center {
-    padding-top: 2px;
+    padding-top: 0 !important;
+    margin-top: 0 !important;
     padding-bottom: 2px;
     gap: 2px;
     font-size: 0.9em;
@@ -219,7 +223,7 @@
   }
   .social-buttons-below {
     margin-top: 18px;
-    margin-bottom: 40px;
+    margin-bottom: 0 !important;
     justify-content: center !important;
     gap: 18px;
     width: 100%;
