@@ -8,8 +8,36 @@ function calcularValor(state) {
 }
 
 export const steps = [
-  // 1. Tipo de Serviço
+  // 1. Tipo de Serviço (ADAPTADO PARA MOBILE, sem perder info desktop)
   function stepTipoServico(state) {
+    // Detecta mobile para mostrar botões e social, desktop mantém select
+    const isMobile = window.innerWidth <= 600;
+
+    if (isMobile) {
+      return `
+        <div class="main-question">Qual tipo de serviço você deseja?</div>
+        <div class="main-options">
+          <button class="option-btn" data-value="video">Edição de Vídeos</button>
+          <button class="option-btn" data-value="motion">Motion Design</button>
+        </div>
+        <nav class="social-container social-footer-below">
+          <a aria-label="LinkedIn" href="https://www.linkedin.com/in/danielescheibler/" target="_blank" rel="noopener">
+            <i class="fab fa-linkedin-in"></i>
+          </a>
+          <a aria-label="Instagram" href="https://www.instagram.com/danieles.designer/" target="_blank" rel="noopener">
+            <i class="fab fa-instagram"></i>
+          </a>
+          <a aria-label="GitHub" href="https://github.com/danielescheibler" target="_blank" rel="noopener">
+            <i class="fab fa-github"></i>
+          </a>
+          <a aria-label="E-mail" href="mailto:danielescheibler@gmail.com" target="_blank" rel="noopener">
+            <i class="fas fa-envelope"></i>
+          </a>
+        </nav>
+      `;
+    }
+
+    // DESKTOP: mantém select
     return `
       <div class="step active">
         <div class="step-title">Tipo de Serviço</div>
