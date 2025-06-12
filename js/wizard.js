@@ -197,42 +197,48 @@ function renderStep() {
       };
       formButtons.appendChild(btnBack);
     }
-    let btnNext = document.createElement('button');
-    btnNext.className = "next";
-    btnNext.type = "button";
-    btnNext.textContent = "Próximo";
-    btnNext.onclick = () => {
-      clearValidationMessage();
-      const validation = validarStep(currentStep, state);
-      if (validation) {
-        showValidationMessage(validation);
-        return;
-      }
-      currentStep += 1;
-      // Se avançar para etapa 1 no mobile, esconde topo
-      if (currentStep > 0 && window.innerWidth <= 600) {
-        const layoutLeft = document.querySelector('.layout-left');
-        const layoutRight = document.querySelector('.layout-right');
-        if (layoutLeft) layoutLeft.style.display = 'none';
-        if (layoutRight) {
-          layoutRight.style.width = '100vw';
-          layoutRight.style.maxWidth = '100vw';
+    // Só adiciona o botão "Próximo" se NÃO for mobile na etapa 0
+    if (!(window.innerWidth <= 600 && currentStep === 0)) {
+      let btnNext = document.createElement('button');
+      btnNext.className = "next";
+      btnNext.type = "button";
+      btnNext.textContent = "Próximo";
+      btnNext.onclick = () => {
+        clearValidationMessage();
+        const validation = validarStep(currentStep, state);
+        if (validation) {
+          showValidationMessage(validation);
+          return;
         }
-      }
-      renderStep();
-    };
-    formButtons.appendChild(btnNext);
+        currentStep += 1;
+        // Se avançar para etapa 1 no mobile, esconde topo
+        if (currentStep > 0 && window.innerWidth <= 600) {
+          const layoutLeft = document.querySelector('.layout-left');
+          const layoutRight = document.querySelector('.layout-right');
+          if (layoutLeft) layoutLeft.style.display = 'none';
+          if (layoutRight) {
+            layoutRight.style.width = '100vw';
+            layoutRight.style.maxWidth = '100vw';
+          }
+        }
+        renderStep();
+      };
+      formButtons.appendChild(btnNext);
+    }
     wizard.appendChild(formButtons);
 
- 
+    // Adiciona socialBelow se existir (ajuste para não dar erro se não houver)
+    const socialBelow = document.querySelector('.social-buttons-below');
+    if (socialBelow) {
       formButtons.insertAdjacentElement("afterend", socialBelow);
     }
 
+    // Mensagem de validação
     let valMsgDiv = document.createElement('div');
     valMsgDiv.id = "form-validation-message-container";
     formButtons.parentNode.insertBefore(valMsgDiv, formButtons.nextSibling);
   }
-
+}
 
 window.onload = () => {
   currentStep = 0;

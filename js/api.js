@@ -22,7 +22,7 @@ export async function enviarOrcamento(dados) {
   };
 
   try {
-    const response = await fetch('/enviar-orcamento', {
+    const response = await fetch('http://localhost:3000/enviar-orcamento', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)

@@ -11,9 +11,9 @@ export function clearValidationMessage() {
 }
 
 export function validarStep(currentStep, state) {
-  if (currentStep === 0 && !state.tipoServico) return 'Selecione o tipo de serviço para continuar.';
-  if (currentStep === 1 && (!state.nome || !state.email)) return 'Preencha nome e e-mail.';
-  if (currentStep === 2 && !state.mensagemPublico) return 'Descreva seu objetivo/público.';
+  if (currentStep === 0 && !state.tipoServico) return 'Que tal escolher o tipo de serviço pra gente começar? 😊';
+  if (currentStep === 1 && (!state.nome || !state.email)) return 'Opa! Precisa preencher todos os campos hein 👀';
+  if (currentStep === 2 && !state.mensagemPublico) return 'Me conta um pouquinho sobre seu objetivo ou público? Isso vai ajudar bastante!';
   if (currentStep === 3) {
     if (state.tipoServico === "video") {
       const duracaoBruto = Number(state.duracaoBruto);
@@ -27,14 +27,14 @@ export function validarStep(currentStep, state) {
     } else {
       const tempoFinal = Number(state.tempoFinal);
       if (!state.tempoFinal || isNaN(tempoFinal)) {
-        return "Preencha o tempo final apenas com números.";
+        return "Coloca o tempo final usando só números, por gentileza!";
       }
     }
   }
-  if (currentStep === 4 && (!state.ref1 || !state.ref2)) return 'Informe os dois links de referência.';
+  if (currentStep === 4 && (!state.ref1 || !state.ref2)) return 'Pode me enviar dois links de referência? Isso vai ajudar a entender melhor o que você quer ✨';
   if (currentStep === 5) {
     if (state.tipoServico === "video") {
-      if (!state.efeitosAnimacoes || !state.legenda) return 'Selecione efeitos/legenda.';
+      if (!state.efeitosAnimacoes || !state.legenda) return 'Opa, tem campo em branco! Bora preencher?';
     } else {
       if (!state.descricao) return 'Descreva sua ideia/roteiro.';
     }

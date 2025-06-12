@@ -1,18 +1,9 @@
-function calcularValor(state) {
-  if (state.tipoServico === 'motion') return 1200;
-  if (state.tipoServico === 'video') {
-    if (state.efeitosAnimacoes === 'complexos') return 900;
-    return 500;
-  }
-  return 400;
-}
+import { calcularValor } from './orcamentoRules.js';
 
 export const steps = [
   // 1. Tipo de Serviço (ADAPTADO PARA MOBILE, sem perder info desktop)
   function stepTipoServico(state) {
-    // Detecta mobile para mostrar botões e social, desktop mantém select
     const isMobile = window.innerWidth <= 600;
-
     if (isMobile) {
       return `
         <div class="main-question">Qual tipo de serviço você deseja?</div>
@@ -20,10 +11,8 @@ export const steps = [
           <button class="option-btn" data-value="video">Edição de Vídeos</button>
           <button class="option-btn" data-value="motion">Motion Design</button>
         </div>
-             `;
+      `;
     }
-
-    // DESKTOP: mantém select
     return `
       <div class="step active">
         <div class="step-title">Tipo de Serviço</div>
@@ -111,7 +100,7 @@ export const steps = [
             <option value="complexos" ${state.efeitosAnimacoes === 'complexos' ? 'selected' : ''}>Complexos (efeitos especiais, objetos, cenários)</option>
           </select>
           <label>Legendas</label>
-          <div class="dica">Precisa de legendas inseridas no vídeo?</div>
+          <div class="dica">Precisa de legendas inseridas no vídeo? <br>(as legendas sempre passam por revisão)</div>
           <select id="legenda">
             <option value="" disabled ${!state.legenda ? 'selected' : ''}>Selecione...</option>
             <option value="nao" ${state.legenda === 'nao' ? 'selected' : ''}>Não</option>
@@ -168,41 +157,27 @@ export const steps = [
   },
   // 8. Resumo e envio
   function stepResumoEnvio(state) {
-    const valor = calcularValor(state).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-    const gifPath = "assets/please.gif";
+    const calc = calcularValor(state);
+    // Garante que sempre exibe "Valor estimado: R$"
+    const valorTexto = `Valor estimado: R$ ${calc.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
 
-    let mensagemAvaliacao = '';
+    const detalhesExtras = `
+      <div style="margin-top:10px;">
+        <b>Inclui:</b> ${calc.revisoes} revisão${calc.revisoes > 1 ? 's' : ''}<br>
+        <b>Prazo estimado:</b> ${calc.prazo} dias úteis<br>
+        ${calc.urgente ? '<b style="color:#b90000;">Taxa de urgência aplicada (+30%)</b><br>' : ''}
+        ${calc.legendaIncluiRevisao ? '<b>Legenda revisada incluída!</b><br>' : ''}
+      </div>
+    `;
+
+    let mensagemAvaliacao = `
+      <div style="color:#40849e; font-size:0.92em; margin-top:8px;">
+        Este valor é uma estimativa inicial e pode variar conforme a complexidade do projeto.<br>
+        <br>
+        Entre em contato para que eu possa fazer uma análise detalhada, e lhe enviar um orçamento personalizado. ✨
+      </div>
+    `;
     let gifMensagemHTML = '';
-
-    if (state.tipoServico === 'motion') {
-      gifMensagemHTML = `
-        <div style="display: flex; align-items: center; justify-content: center; gap: 18px; margin: 18px 0;">
-          <div style="color:#40849e; font-size:1em; text-align:left;">
-            Este valor é uma aproximação.<br>
-            Para orçamento final, envie para a editora analisar seu projeto detalhadamente!
-          </div>
-          <img src="${gifPath}" alt="Por favor, envie para avaliação" style="width:80px;max-width:90vw;border-radius:7px;"/>
-        </div>
-      `;
-    } else if (state.tipoServico === 'video' && state.efeitosAnimacoes === 'complexos') {
-      gifMensagemHTML = `
-        <div style="display: flex; align-items: center; justify-content: center; gap: 18px; margin: 18px 0;">
-          <div class="aviso-menor">
-            Como você selecionou "efeitos e animações complexas",
-            este valor é apenas uma referência.<br>
-            Envie para a editora analisar e fornecer uma proposta personalizada.
-          </div>
-          <img src="${gifPath}" alt="Por favor, envie para avaliação" style="width:80px;max-width:90vw;border-radius:7px;"/>
-        </div>
-      `;
-    } else {
-      mensagemAvaliacao = `
-        <div style="color:#40849e; font-size:0.92em; margin-top:8px;">
-          Este valor é uma aproximação e pode variar após avaliação detalhada da editora. ✨
-        </div>
-      `;
-      gifMensagemHTML = '';
-    }
 
     let resumoHtml = `
       <div class="step active">
@@ -245,12 +220,13 @@ export const steps = [
     }
     resumoHtml += `
       <div style="margin-top:14px;">
-        <strong style="color:#40849e;font-size:1.2em;">Valor estimado: ${valor}</strong>
+        <strong style="color:#40849e;font-size:1.2em;">${valorTexto}</strong>
+        ${detalhesExtras}
       </div>
       </div>
       <div class="form-buttons" style="justify-content:center;gap:12px;">
         <button class="back" id="voltar-btn" type="button">Voltar</button>
-        <button class="next" id="enviar-btn" type="button">Enviar Orçamento</button>
+        <button class="next" id="enviar-btn" type="button">Enviar Orçamento<br> por e-mail</button>
       </div>
       <div id="form-validation-message-container"></div>
       ${gifMensagemHTML || mensagemAvaliacao}

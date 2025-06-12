@@ -30,6 +30,7 @@ function minutosParaSegundos(str) {
   if (m && m.length === 2) return parseInt(m[0],10)*60 + parseInt(m[1],10);
   return 0;
 }
+
 function calcularValorVideo(dados) {
   let valorBase = 100, valorEfeitos = 0, valorLegenda = 0, valorTotal = 0;
   let totalSegFinal = minutosParaSegundos(dados.duracaoFinal);
@@ -47,9 +48,14 @@ function calcularValorVideo(dados) {
   }
   return valorTotal.toFixed(2).replace('.', ',');
 }
+
 function calcularValorMotion(dados) {
-  if (Number(dados.tempoFinal) > 5) return 'Sob análise';
-  return '200,00';
+  const tempo = Number(dados.tempoFinal);
+  if (isNaN(tempo) || tempo <= 0) return 'A definir';
+  if (tempo <= 5) return '200,00';
+  if (tempo <= 10) return '400,00';
+  if (tempo <= 20) return '600,00';
+  return '800,00';
 }
 
 function resumoOrcamento(dados) {
@@ -82,19 +88,15 @@ function resumoOrcamento(dados) {
     }
     linhas.push(`<strong>Descrição:</strong> ${dados.descricao || ''}`);
 
-    if (Number(dados.tempoFinal) > 5) {
-      linhas.push(`
-        <div style="color:#40849e;font-weight:600;font-size:1.07em;margin:10px 0 6px;">
-          Para finalizar seu orçamento é necessária análise da sua solicitação, peço que me envie mais detalhes por <a href="mailto:danielescheibler@gmail.com" target="_blank">e-mail</a> ou <a href="https://wa.me/5551997523656" target="_blank">WhatsApp</a>.
-        </div>
-        <div style="text-align:center;margin:10px 0 4px;">
-          Aguardo mais detalhes.
-        </div>
-      `);
-      linhas.push(`<strong>Valor estimado:</strong> Sob análise`);
-    } else {
-      linhas.push(`<strong>Valor estimado:</strong> R$ 200,00`);
-    }
+    const valor = calcularValorMotion(dados);
+    linhas.push(`<strong>Valor estimado:</strong> R$ ${valor}`);
+    linhas.push(`
+      <div style="color:#40849e;font-weight:600;font-size:1.07em;margin:10px 0 6px;">
+        Este valor é uma estimativa inicial e pode variar conforme a complexidade do projeto.<br>
+        Entre em contato para um orçamento personalizado! ✨<br>
+        <a href="mailto:danielescheibler@gmail.com" target="_blank">E-mail</a> ou <a href="https://wa.me/5551997523656" target="_blank">WhatsApp</a>
+      </div>
+    `);
   }
   return linhas.join('<br>');
 }

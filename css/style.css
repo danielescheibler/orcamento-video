@@ -288,7 +288,7 @@ button.next,
   border: 2px solid #40849e;
   border-radius: 7px;
   padding: 10px 0;
-  font-size: 1em;
+  font-size: 0.8em;
   cursor: pointer;
   font-weight: 700;
   transition: background 0.16s, color 0.16s, border 0.16s;
@@ -344,20 +344,20 @@ button.next[disabled] {
 }
 
 .resumo-quadro {
-  font-size: 1em !important;
+  font-size: 0.9em !important;
   line-height: 1.22;
-  padding: 8px 14px !important;
+  padding: 8px 8px !important;
   background: #f6fafc;
   color: #0d1215;
-  border-radius: 7px !important;
+  border-radius: 8px !important;
   border: 1px solid #40849e !important;
   box-sizing: border-box;
   word-break: break-word;
-  margin: 0 auto 12px auto;
+  margin: 12px auto 12px auto;
   width: 100%;
   max-width: 420px;
   min-width: 140px;
-  max-height: calc(4em * 3 + 16px);
+  max-height: calc(3em * 3);
   overflow-y: auto;
 }
 .resumo-quadro ul {
